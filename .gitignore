@@ -7,3 +7,4 @@ ioctl
 *.o
 *.so
 .tmp_versions/
+*.cmd
