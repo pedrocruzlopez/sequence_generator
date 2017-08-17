@@ -1,0 +1,2 @@
+gcc $(mysql_config --cflags) -shared -fPIC -o calc_distance_udf.so calc_distance_udf.c
+cp calc_distance_udf.so /usr/lib/mysql/plugin/

@@ -146,43 +146,10 @@ long  device_ioctl(	/* see include/linux/fs.h */
 		 unsigned int ioctl_num,	/* number and param for ioctl */
 		 unsigned long ioctl_param)
 {
-	//long ioctl(struct file *filp,unsigned int cmd, unsigned long arg)
 
-
-	/* 
-	 * Switch according to the ioctl called 
-	 */
+	put_user(number, (int *)ioctl_param);
+	number++;
 	
-	switch (ioctl_num) {
-	case IOCTL_SET_MSG:
-		
-		//seq.value = 78;
-		//seq_ptr = &seq;
-		device_write(file, (int *)ioctl_param, 0, 0);
-		break;
-
-	case IOCTL_GET_MSG:
-		/* 
-		 * Give the current message to the calling process - 
-		 * the parameter we got is a pointer, fill it. 
-		 */
-		
-		   
-		put_user(number, (int *)ioctl_param);
-		number++;
-		//number_ptr = &number;
-		
-		
-		break;
-
-	case IOCTL_GET_NTH_BYTE:
-		/* 
-		 * This ioctl is both input (ioctl_param) and 
-		 * output (the return value of this function) 
-		 */
-		return 1;
-		break;
-	}
 
 	return SUCCESS;
 }
