@@ -9,7 +9,7 @@
 
 #include "sequence_driver.h"
 #define SUCCESS 0
-#define DEVICE_NAME "char_dev"
+#define DEVICE_NAME "seq_dev"
 #define BUF_LEN 80
 
 /* 
@@ -23,7 +23,7 @@ static int Device_Open = 0;
  */
 
 static int number = 1;
-static int *number_ptr;
+static int sequences[11];
 
 /* 
  * How far did the process reading the message get?
@@ -51,9 +51,7 @@ static int device_open(struct inode *inode, struct file *file)
 	 * Initialize the message 
 	 */
 		
-
 	
-
 	try_module_get(THIS_MODULE);
 	return SUCCESS;
 }
@@ -84,17 +82,7 @@ static ssize_t device_read(struct file *file, int __user * buffer)
 
 	
 		
-	/*if(copy_to_user(buffer, seq_ptr, sizeof(sequence))){
-		
-		return -EACCES;
-	}*/
-
-	put_user(*(number_ptr), buffer);
-	number++;
-	number_ptr = &number;
-	//put_user(*(Message_Ptr++), buffer++);
 	
-
 #ifdef DEBUG
 	printk(KERN_INFO "device_read(%p,%p,%d)\n", file);
 #endif
@@ -119,15 +107,7 @@ static ssize_t device_write(struct file *file,
 	printk(KERN_INFO "device_write(%p,%s,%d)", file, buffer, length);
 #endif
 
-	
-	
 
-	
-	
-
-	/* 
-	 * Again, return the number of input characters used 
-	 */
 	return 0;
 }
 
@@ -147,8 +127,8 @@ long  device_ioctl(	/* see include/linux/fs.h */
 		 unsigned long ioctl_param)
 {
 
-	put_user(number, (int *)ioctl_param);
-	number++;
+	put_user(sequences[ioctl_num], (int *)ioctl_param);
+	sequences[ioctl_num] = sequences[ioctl_num]+1;
 	
 
 	return SUCCESS;
@@ -177,6 +157,11 @@ struct file_operations Fops = {
 int init_module()
 {
 	int ret_val;
+	
+	for (int i = 0 ; i < 11 ; i++){
+		sequences[i] = 1;
+	}
+	//number = 1;
 	/* 
 	 * Register the character device (atleast try) 
 	 */

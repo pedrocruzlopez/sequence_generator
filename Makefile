@@ -7,6 +7,7 @@ PWD := $(shell pwd)
 default:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 	gcc -o ioctl ioctl.c
+	
 clean:
 	rm -f ioctl
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
