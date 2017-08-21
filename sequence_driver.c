@@ -178,7 +178,7 @@ int init_module()
 	printk(KERN_INFO "If you want to talk to the device driver,\n");
 	printk(KERN_INFO "you'll have to create a device file. \n");
 	printk(KERN_INFO "We suggest you use:\n");
-	printk(KERN_INFO "mknod %s c %d 0\n", DEVICE_FILE_NAME, MAJOR_NUM);
+	printk(KERN_INFO "mknod /dev/%s c %d 0\n", DEVICE_FILE_NAME, MAJOR_NUM);
 	printk(KERN_INFO "The device file name is important, because\n");
 	printk(KERN_INFO "the ioctl program assumes that's the\n");
 	printk(KERN_INFO "file you'll use.\n");
@@ -196,3 +196,7 @@ void cleanup_module()
 
 
 }
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Pedro Enrique Cruz Lopez");
+MODULE_DESCRIPTION("Sequence driver");
