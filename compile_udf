@@ -1,6 +1,6 @@
-gcc $(mysql_config --cflags) -shared -fPIC -o calc_distance_udf.so calc_distance_udf.c
-cp calc_distance_udf.so /usr/lib/mysql/plugin/
-
-
 gcc $(mysql_config --cflags) -shared -fPIC -o get_sequence.so get_sequence.c
 cp get_sequence.so /usr/lib/mysql/plugin/
+
+
+gcc $(mysql_config --cflags) -shared -fPIC -o get_uuid.so get_uuid.c
+cp get_uuid.so /usr/lib/mysql/plugin/

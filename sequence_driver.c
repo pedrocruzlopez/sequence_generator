@@ -22,7 +22,6 @@ static int Device_Open = 0;
  * The message the device will give when asked 
  */
 
-static int number = 1;
 static int sequences[11];
 
 /* 
@@ -34,8 +33,9 @@ static int sequences[11];
 /* 
  * This is called whenever a process attempts to open the device file 
  */
-static int device_open(struct inode *inode, struct file *file)
-{
+static int device_open(struct inode *inode, struct file *file){
+
+
 #ifdef DEBUG
 	printk(KERN_INFO "device_open(%p)\n", file);
 #endif
@@ -78,18 +78,13 @@ static int device_release(struct inode *inode, struct file *file)
 static ssize_t device_read(struct file *file, int __user * buffer)
 {
 
-
-
 	
-		
 	
 #ifdef DEBUG
 	printk(KERN_INFO "device_read(%p,%p,%d)\n", file);
 #endif
 
 	
-
-
 	return sizeof(sequence);
 }
 
@@ -127,8 +122,10 @@ long  device_ioctl(	/* see include/linux/fs.h */
 		 unsigned long ioctl_param)
 {
 
-	put_user(sequences[ioctl_num], (int *)ioctl_param);
-	sequences[ioctl_num] = sequences[ioctl_num]+1;
+			
+	
+	__put_user(sequences[ioctl_num], (int *)ioctl_param);
+	sequences[ioctl_num]++;
 	
 
 	return SUCCESS;
@@ -157,8 +154,8 @@ struct file_operations Fops = {
 int init_module()
 {
 	int ret_val;
-	
-	for (int i = 0 ; i < 11 ; i++){
+	int i;
+	for (i = 0 ; i < 11 ; i++){
 		sequences[i] = 1;
 	}
 	//number = 1;
