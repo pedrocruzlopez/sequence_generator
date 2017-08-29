@@ -78,23 +78,23 @@ void get_uuid_deinit(UDF_INIT *initid __attribute__((unused))){
 
 int ioctl_get_msg(int file_desc, long long sequence)
 {
-	int ret_val;
+	
 	int seq;
 	
-	ret_val = ioctl(file_desc, sequence, &seq);
+	ioctl(file_desc, sequence, &seq);
 
 	return seq;
 }
    
-int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null,	char *error){
+int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error){
 	
   
 	
-	int seq;
+	/*int seq;
 	
-	seq = ioctl_get_msg(file_desc, *((long long*) args->args[0]));
+	seq = ioctl_get_msg(file_desc, *((long long*) args->args[0]));*/
 
-	return seq;
+	return ioctl_get_msg(file_desc, *((long long*) args->args[0]));
 	
 }
 
