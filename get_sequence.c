@@ -38,6 +38,8 @@ static pthread_mutex_t LOCK_hostname;
 #endif
   
 #include <math.h>
+
+int file_desc = -1;
    
 my_bool get_sequence_init(UDF_INIT *initid, UDF_ARGS *args, char *message);
 void get_sequence_deinit(UDF_INIT *initid __attribute__((unused)));
@@ -49,6 +51,9 @@ my_bool get_sequence_init(UDF_INIT *initid, UDF_ARGS *args, char *message)  {
 		return 1;
 	}
    
+     if(file_desc == -1){
+	 file_desc = open("/dev/seq_dev", 0);
+     }
      return 0;
 }
    
@@ -81,17 +86,13 @@ int ioctl_get_msg(int file_desc, long long sequence)
 	return seq;
 }
    
-int get_sequence(UDF_INIT *initid,	UDF_ARGS *args,	char *is_null,	char *error){
+int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null,	char *error){
 	
   
-	int ret_val;
-	int seq;
-	int file_desc;
 	
-	file_desc = open("/dev/seq_dev", 0);
+	int seq;
+	
 	seq = ioctl_get_msg(file_desc, *((long long*) args->args[0]));
-
-	close(file_desc);
 
 	return seq;
 	

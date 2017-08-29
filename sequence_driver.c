@@ -125,7 +125,9 @@ long  device_ioctl(	/* see include/linux/fs.h */
 			
 	
 	__put_user(sequences[ioctl_num], (int *)ioctl_param);
-	sequences[ioctl_num]++;
+	asm( "mov %1, %%ebx;"
+ 	     "inc %%ebx;"
+             "mov %%ebx, %0" : "=r"(sequences[ioctl_num]) : "r" (sequences[ioctl_num]));
 	
 
 	return SUCCESS;
