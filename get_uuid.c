@@ -56,7 +56,14 @@ void get_uuid_deinit(UDF_INIT *initid __attribute__((unused))){
 
 char *get_uuid (UDF_INIT *initid, UDF_ARGS *args, char *result, unsigned long *length, char *is_null, char *error){
 
-	return "hola";
+	char *hola = "hollalaal";
+
+	/**is_null = 0;
+	*error = 0;
+	memcpy(result,"begginning",10);
+    	*length= (unsigned long)(10);*/
+
+	return hola;
 }
    
  #endif /* HAVE_DLOPEN */

@@ -37,13 +37,16 @@
 static pthread_mutex_t LOCK_hostname;
 #endif
   
-#include <math.h>
+
 
 int file_desc = -1;
+
+
    
 my_bool get_sequence_init(UDF_INIT *initid, UDF_ARGS *args, char *message);
 void get_sequence_deinit(UDF_INIT *initid __attribute__((unused)));
-int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error);
+unsigned int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error);
+unsigned int ioctl_get_msg(int file_desc, long long sequence);
    
 my_bool get_sequence_init(UDF_INIT *initid, UDF_ARGS *args, char *message)  {
 	if(!(args->arg_count == 1)) {
@@ -63,45 +66,25 @@ void get_sequence_deinit(UDF_INIT *initid __attribute__((unused)))  {
 }
 
 
-my_bool get_uuid_init (UDF_INIT *initid, UDF_ARGS *args, char *message);
-void get_uuid_deinit(UDF_INIT *initid __attribute__((unused)));
-char *get_uuid (UDF_INIT *initid, UDF_ARGS *args, char *result, unsigned long *length, char *is_null, char *error);
-
-my_bool get_uuid_init(UDF_INIT *initid, UDF_ARGS *args, char *message){
-	return 0;
-}
-
-void get_uuid_deinit(UDF_INIT *initid __attribute__((unused))){
-
-}
-
-
-int ioctl_get_msg(int file_desc, long long sequence)
+unsigned int ioctl_get_msg(int file_desc, long long sequence)
 {
 	
-	int seq;
-	
+	auto unsigned int seq;
+
 	ioctl(file_desc, sequence, &seq);
 
 	return seq;
 }
    
-int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error){
+unsigned int get_sequence(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error){
 	
   
-	
-	/*int seq;
-	
-	seq = ioctl_get_msg(file_desc, *((long long*) args->args[0]));*/
 
 	return ioctl_get_msg(file_desc, *((long long*) args->args[0]));
 	
 }
 
-char *get_uuid (UDF_INIT *initid, UDF_ARGS *args, char *result, unsigned long *length, char *is_null, char *error){
 
-	return "hola";
-}
    
  #endif /* HAVE_DLOPEN */
    

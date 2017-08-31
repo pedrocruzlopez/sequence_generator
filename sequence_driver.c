@@ -18,17 +18,9 @@
  */
 static int Device_Open = 0;
 
-/* 
- * The message the device will give when asked 
- */
 
 static int sequences[11];
 
-/* 
- * How far did the process reading the message get?
- * Useful if the message is larger than the size of the
- * buffer we get to fill in device_read. 
- */
 
 /* 
  * This is called whenever a process attempts to open the device file 
@@ -47,9 +39,6 @@ static int device_open(struct inode *inode, struct file *file){
 		return -EBUSY;
 
 	Device_Open++;
-	/*
-	 * Initialize the message 
-	 */
 		
 	
 	try_module_get(THIS_MODULE);
@@ -160,7 +149,7 @@ int init_module()
 	for (i = 0 ; i < 11 ; i++){
 		sequences[i] = 1;
 	}
-	//number = 1;
+
 	/* 
 	 * Register the character device (atleast try) 
 	 */
