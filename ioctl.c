@@ -61,29 +61,6 @@ int ioctl_get_msg(int file_desc)
 	return ret_val;
 }
 
-int ioctl_get_nth_byte(int file_desc)
-{
-	int i;
-	char c;
-
-	printf("get_nth_byte message:");
-
-	i = 0;
-	do {
-		c = ioctl(file_desc, IOCTL_GET_NTH_BYTE, i++);
-
-		if (c < 0) {
-			printf
-			    ("ioctl_get_nth_byte failed at the %d'th byte:\n",
-			     i);
-			exit(-1);
-		}
-
-		putchar(c);
-	} while (c != 0);
-	putchar('\n');
-	return i;
-}
 
 /* 
  * Main - Call the ioctl functions 

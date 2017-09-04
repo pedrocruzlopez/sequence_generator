@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <fcntl.h>		/* open */
 #include <unistd.h>		/* exit */
-#include <linux/ioctl.h>		/* ioctl */
+#include <sys/ioctl.h>		/* ioctl */
 
 /* 
  * Functions for the ioctl calls 
@@ -23,7 +23,7 @@
 
 
 
-int ioctl_set_msg(int file_desc, char *message)
+int ioctl_set_msg(int file_desc, sequence_request *message)
 {
 	int ret_val;
 
@@ -33,6 +33,31 @@ int ioctl_set_msg(int file_desc, char *message)
 		printf("ioctl_set_msg failed:%d\n", ret_val);
 		exit(-1);
 	}
+	return ret_val;
+}
+
+int ioctl_get_msg(int file_desc)
+{
+	int ret_val;
+	int seq;
+	
+
+	/* 
+	 * Warning - this is dangerous because we don't tell
+	 * the kernel how far it's allowed to write, so it
+	 * might overflow the buffer. In a real production
+	 * program, we would have used two ioctls - one to tell
+	 * the kernel the buffer length and another to give
+	 * it the buffer to fill
+	 */
+	ret_val = ioctl(file_desc, 1, &seq);
+
+	if (ret_val < 0) {
+		printf("ioctl_get_msg failed:%d\n", ret_val);
+		exit(-1);
+	}
+
+	printf("get_msg message:%d\n", seq);
 	return ret_val;
 }
 
@@ -48,9 +73,13 @@ int main()
 		printf("Can't open device file: %s\n", HANDLER_FILE_PATH);
 		exit(-1);
 	}
-	char *message = "1-12";
+	sequence_request seq_req;
+	seq_req.offset = 1;
+	seq_req.value = 99;
 
-	ioctl_set_msg(file_desc, message);
+	ioctl_get_msg(file_desc);
+	ioctl_set_msg(file_desc, &seq_req);
+	ioctl_get_msg(file_desc);
 
 
 	close(file_desc);

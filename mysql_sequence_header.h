@@ -14,13 +14,13 @@
 
 
 
-static int sequences[11];
 
-struct sequence_request
+
+typedef struct
 {
 	int offset; //Position of the n element to read or write
 	int value ; //Value to send or comes from user
-};
+} sequence_request;
 
 /* 
  * The major device number. We can't rely on dynamic 
@@ -28,13 +28,13 @@ struct sequence_request
  * it. 
  */
 #define MAJOR_NUM 100
-
+#define MAJOR_NUM_HANDLER 101
 
 
 /* 
  * Set the message of the device driver 
  */
-#define IOCTL_SET_SEQ _IOR(MAJOR_NUM, 0, int)
+#define IOCTL_SET_SEQ _IOR(MAJOR_NUM, 0, sequence_request)
 /*
  * _IOR means that we're creating an ioctl command 
  * number for passing information from a user process
@@ -48,27 +48,6 @@ struct sequence_request
  *
  * The third argument is the type we want to get from 
  * the process to the kernel.
- */
-
-/* 
- * Get the message of the device driver 
- */
-#define IOCTL_GET_SEQ _IOR(MAJOR_NUM, 1, int)
-/* 
- * This IOCTL is used for output, to get the message 
- * of the device driver. However, we still need the 
- * buffer to place the message in to be input, 
- * as it is allocated by the process.
- */
-
-/* 
- * Get the n'th byte of the message 
- */
-#define IOCTL_GET_NTH_BYTE _IOWR(MAJOR_NUM, 2, int)
-/* 
- * The IOCTL is used for both input and output. It 
- * receives from the user a number, n, and returns 
- * Message[n]. 
  */
 
 /* 
