@@ -8,3 +8,5 @@ ioctl
 *.so
 .tmp_versions/
 *.cmd
+build/
+install
