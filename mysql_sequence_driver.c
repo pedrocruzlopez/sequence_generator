@@ -2,25 +2,25 @@
  *  sequence_driver.c - Create an input/output character device
  */
 
-#include <linux/kernel.h>	/* We're doing kernel work */
-#include <linux/module.h>	/* Specifically, a module */
+#include <linux/kernel.h>	
+#include <linux/module.h>	
 #include <linux/fs.h>
-#include <asm/uaccess.h>	/* for get_user and put_user */
+#include <asm/uaccess.h>	
 
-#include "sequence_driver.h"
+#include "mysql_sequence_header.h"
 #define SUCCESS 0
-#define DEVICE_NAME "seq_dev"
-#define BUF_LEN 80
+#define DEVICE_NAME "mysql_seq_dev"
+
 
 /* 
  * Is the device open right now? Used to prevent
  * concurent access into the same device 
  */
-static int Device_Open = 0;
+static int _device_open = 0;
 
 
-static int sequences[11];
-
+extern int sequences[11];
+EXPORT_SYMBOL(sequences);
 
 /* 
  * This is called whenever a process attempts to open the device file 
@@ -35,10 +35,10 @@ static int device_open(struct inode *inode, struct file *file){
 	/* 
 	 * We don't want to talk to two processes at the same time 
 	 */
-	if (Device_Open)
+	if (_device_open)
 		return -EBUSY;
 
-	Device_Open++;
+	_device_open++;
 		
 	
 	try_module_get(THIS_MODULE);
@@ -54,7 +54,7 @@ static int device_release(struct inode *inode, struct file *file)
 	/* 
 	 * We're now ready for our next caller 
 	 */
-	Device_Open--;
+	_device_open--;
 
 	module_put(THIS_MODULE);
 	return SUCCESS;
@@ -64,36 +64,7 @@ static int device_release(struct inode *inode, struct file *file)
  * This function is called whenever a process which has already opened the
  * device file attempts to read from it.
  */
-static ssize_t device_read(struct file *file, int __user * buffer)
-{
 
-	
-	
-#ifdef DEBUG
-	printk(KERN_INFO "device_read(%p,%p,%d)\n", file);
-#endif
-
-	
-	return sizeof(sequence);
-}
-
-
-/* 
- * This function is called when somebody tries to
- * write into our device file. 
- */
-static ssize_t device_write(struct file *file,
-	     const int __user * buffer, size_t length, loff_t * offset)
-{
-	
-
-#ifdef DEBUG
-	printk(KERN_INFO "device_write(%p,%s,%d)", file, buffer, length);
-#endif
-
-
-	return 0;
-}
 
 /* 
  * This function is called whenever a process tries to do an ioctl on our
@@ -105,19 +76,13 @@ static ssize_t device_write(struct file *file,
  * calling process), the ioctl call returns the output of this function.
  *
  */
-long  device_ioctl(	/* see include/linux/fs.h */
-		 struct file *file,	/* ditto */
-		 unsigned int ioctl_num,	/* number and param for ioctl */
-		 unsigned long ioctl_param)
+long  device_ioctl(	struct file *file,	 unsigned int ioctl_num, unsigned long ioctl_param)
 {
 
-			
-	
 	__put_user(sequences[ioctl_num], (int *)ioctl_param);
 	asm( "mov %1, %%ebx;"
  	     "inc %%ebx;"
-             "mov %%ebx, %0" : "=r"(sequences[ioctl_num]) : "r" (sequences[ioctl_num]));
-	
+         "mov %%ebx, %0" : "=r"(sequences[ioctl_num]) : "r" (sequences[ioctl_num]));
 
 	return SUCCESS;
 }
@@ -132,8 +97,6 @@ long  device_ioctl(	/* see include/linux/fs.h */
  * init_module. NULL is for unimplemented functions. 
  */
 struct file_operations Fops = {
-	.read = device_read,
-	.write = device_write,
 	.unlocked_ioctl = device_ioctl,
 	.open = device_open,
 	.release = device_release,	/* a.k.a. close */
@@ -169,7 +132,7 @@ int init_module()
 	printk(KERN_INFO "If you want to talk to the device driver,\n");
 	printk(KERN_INFO "you'll have to create a device file. \n");
 	printk(KERN_INFO "We suggest you use:\n");
-	printk(KERN_INFO "mknod /dev/%s c %d 0\n", DEVICE_FILE_NAME, MAJOR_NUM);
+	printk(KERN_INFO "mknod %s c %d 0\n", DEVICE_FILE_PATH, MAJOR_NUM);
 	printk(KERN_INFO "The device file name is important, because\n");
 	printk(KERN_INFO "the ioctl program assumes that's the\n");
 	printk(KERN_INFO "file you'll use.\n");
@@ -190,4 +153,4 @@ void cleanup_module()
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Pedro Enrique Cruz Lopez");
-MODULE_DESCRIPTION("Sequence driver");
+MODULE_DESCRIPTION("MYSQL Sequence driver module");

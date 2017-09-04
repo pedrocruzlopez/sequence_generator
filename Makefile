@@ -1,19 +1,15 @@
-obj-m := sequence_driver.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
+obj-m += mysql_sequence_driver.o
 MYSQL_CFLAGS = `mysql_config --cflags`
 MYSQL_PLUGINDIR=`mysql_config --plugindir`
 
-
-default:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 	gcc -o ioctl ioctl.c
-	gcc $(MYSQL_CFLAGS) -shared -fPIC -o get_sequence.so get_sequence.c
-	cp get_sequence.so $(MYSQL_PLUGINDIR)
-	
+	gcc $(MYSQL_CFLAGS) -shared -fPIC -o mysql_get_sequence.so mysql_get_sequence.c
+	cp mysql_get_sequence.so $(MYSQL_PLUGINDIR)
 	
 clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 	rm -f ioctl
-	rm -f get_sequence.so
-	rm -f get_uuid.so
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	rm -f mysql_get_sequence.so
+	rm -f mysql_get_uuid.so

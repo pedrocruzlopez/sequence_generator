@@ -1,15 +1,26 @@
 /*
- *  chardev.h - the header file with the ioctl definitions.
+ *  mysql_sequence_header.h - the header file with the ioctl definitions.
  *
  *  The declarations here have to be in a header file, because
  *  they need to be known both to the kernel module
- *  (in chardev.c) and the process calling ioctl (ioctl.c)
+ *  (in mysql_sequence_driver.c) and the process calling ioctl (mysql_get_sequence.c)
  */
 
 #ifndef CHARDEV_H
 #define CHARDEV_H
 
+#include <linux/kernel.h>
 #include <linux/ioctl.h>
+
+
+
+static int sequences[11];
+
+struct sequence_request
+{
+	int offset; //Position of the n element to read or write
+	int value ; //Value to send or comes from user
+};
 
 /* 
  * The major device number. We can't rely on dynamic 
@@ -18,18 +29,12 @@
  */
 #define MAJOR_NUM 100
 
-typedef struct {
 
-	int value;
-	int status;
-
-
-} sequence;
 
 /* 
  * Set the message of the device driver 
  */
-#define IOCTL_SET_MSG _IOR(MAJOR_NUM, 0, int)
+#define IOCTL_SET_SEQ _IOR(MAJOR_NUM, 0, int)
 /*
  * _IOR means that we're creating an ioctl command 
  * number for passing information from a user process
@@ -48,7 +53,7 @@ typedef struct {
 /* 
  * Get the message of the device driver 
  */
-#define IOCTL_GET_MSG _IOR(MAJOR_NUM, 1, int)
+#define IOCTL_GET_SEQ _IOR(MAJOR_NUM, 1, int)
 /* 
  * This IOCTL is used for output, to get the message 
  * of the device driver. However, we still need the 
@@ -67,8 +72,9 @@ typedef struct {
  */
 
 /* 
- * The name of the device file 
+ * The path of the device, in order to be accesible to everyone, will be stored in /dev/
  */
-#define DEVICE_FILE_NAME "seq_dev"
+#define DEVICE_FILE_PATH "/dev/mysql_seq_dev"
+#define HANDLER_FILE_PATH "/dev/mysql_seq_handler"
 
 #endif

@@ -25,10 +25,10 @@
  #endif
  #include <mysql.h>
  #include <ctype.h>
- #include "sequence_driver.h"
+ #include "mysql_sequence_header.h"
  #include <fcntl.h>		/* open */
  #include <unistd.h>		/* exit */
- #include <linux/ioctl.h>		/* ioctl */
+ #include <sys/ioctl.h>		/* ioctl */
 
    
 #ifdef HAVE_DLOPEN
@@ -55,7 +55,7 @@ my_bool get_sequence_init(UDF_INIT *initid, UDF_ARGS *args, char *message)  {
 	}
    
      if(file_desc == -1){
-	 file_desc = open("/dev/seq_dev", 0);
+	 file_desc = open(DEVICE_FILE_PATH, 0);
      }
      return 0;
 }

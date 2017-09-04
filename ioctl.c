@@ -9,23 +9,25 @@
  * device specifics, such as ioctl numbers and the
  * major device file. 
  */
-#include "sequence_driver.h"
+#include "mysql_sequence_header.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>		/* open */
 #include <unistd.h>		/* exit */
-#include <linux/ioctl.h>		/* ioctl */
+#include <sys/ioctl.h>		/* ioctl */
 
 /* 
  * Functions for the ioctl calls 
  */
 
+
+
 int ioctl_set_msg(int file_desc, int message)
 {
 	int ret_val;
 
-	ret_val = ioctl(file_desc, IOCTL_SET_MSG, message);
+	ret_val = ioctl(file_desc, IOCTL_SET_SEQ, message);
 
 	if (ret_val < 0) {
 		printf("ioctl_set_msg failed:%d\n", ret_val);
@@ -48,7 +50,7 @@ int ioctl_get_msg(int file_desc)
 	 * the kernel the buffer length and another to give
 	 * it the buffer to fill
 	 */
-	ret_val = ioctl(file_desc, 5, &seq);
+	ret_val = ioctl(file_desc, 1, &seq);
 
 	if (ret_val < 0) {
 		printf("ioctl_get_msg failed:%d\n", ret_val);
@@ -89,13 +91,10 @@ int ioctl_get_nth_byte(int file_desc)
 int main()
 {
 	int file_desc, ret_val;
-	sequence seq_new;
-	seq_new.value = 90;
-	seq_new.status = 1;
-
-	file_desc = open("/dev/seq_dev", 0);
+	
+	file_desc = open(DEVICE_FILE_PATH, 0);
 	if (file_desc < 0) {
-		printf("Can't open device file: %s\n", DEVICE_FILE_NAME);
+		printf("Can't open device file: %s\n", DEVICE_FILE_PATH);
 		exit(-1);
 	}
 
