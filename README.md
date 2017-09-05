@@ -7,5 +7,11 @@ Sequence Generator is an alternative to implement numeric auto increment & UUID 
 ### Requistes
 
 - Linux SO 
-- MySQL (Any version)
 - GCC Compiler
+- CMake
+- MySQL or PostgreSQL (Any version)
+
+### Installation
+
+
+
