@@ -43,3 +43,17 @@ chmod -R 777 /path/sequence_generator
 ```
 ./install.sh
 ```
+
+## Authors
+
+* **Pedro Cruz** - https://www.upwork.com/o/profiles/users/_~0172a739a43382b64b/  -  https://github.com/pedrocruzlopez
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Acknowledgments
+
+* Edgar René Ornelis Hoil
+
+* etc
