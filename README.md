@@ -44,7 +44,7 @@ chmod -R 777 /path/sequence_generator
 ./install.sh
 ```
 
-## Authors
+## Author
 
 * **Pedro Cruz** 
   - https://www.upwork.com/o/profiles/users/_~0172a739a43382b64b/  
