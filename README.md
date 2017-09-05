@@ -46,7 +46,9 @@ chmod -R 777 /path/sequence_generator
 
 ## Authors
 
-* **Pedro Cruz** - https://www.upwork.com/o/profiles/users/_~0172a739a43382b64b/  -  https://github.com/pedrocruzlopez
+* **Pedro Cruz** 
+  - https://www.upwork.com/o/profiles/users/_~0172a739a43382b64b/  
+  - https://github.com/pedrocruzlopez
 
 ## License
 
