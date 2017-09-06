@@ -1,0 +1,12 @@
+*.order
+ioctl
+*.symvers
+*.mod.o
+*.ko
+*.mod.c
+*.o
+*.so
+.tmp_versions/
+*.cmd
+build/clear
+

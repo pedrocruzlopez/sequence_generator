@@ -1,4 +1,4 @@
-obj-m += mysql_sequence_driver.o mysql_sequence_handler.o modulo2.o
+obj-m += mysql_sequence_driver.o mysql_sequence_handler.o
 MYSQL_CFLAGS = `mysql_config --cflags`
 MYSQL_PLUGINDIR=`mysql_config --plugindir`
 
