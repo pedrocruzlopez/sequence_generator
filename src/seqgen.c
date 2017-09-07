@@ -3,14 +3,6 @@
 #include <unistd.h>
 
 
-
-void set_credentials(const char *username, const char *password){
-
-	printf("Username %s\n", username);
-	printf("password %s\n", password);
-
-}
-
 void print_help(void)
 {
 	printf("\n Usage: %s [OPTIONS]\n\n", APP_NAME);
@@ -25,12 +17,47 @@ void print_help(void)
 	printf("\n");
 }
 
-int mysql_get_credentials_config(void){
-	return 0;
+void get_credentials_from_user_input(int database_id) {
+
+	if(get_credentials_config(database_id)){
+		char username[20];
+		printf("%s\n", "Please enter your database username: ");
+		scanf("%s", username);
+		char *password = getpass("Please enter your database password: \n");
+
+		char choice_save[1];
+		while(choice_save[0] != 'y' && choice_save[0] != 'n'){
+			printf("%s\n", "Do you want to save your credentials and don't ask for them again? (y/n):");
+			scanf("%s", choice_save);
+			printf("%s\n", choice_save);
+		}
+		
+		if(choice_save[0] == 'y')
+			set_credentials(username, password, MYSQL_ID);
+		database_main_menu(database_id);
+	} else {
+		database_main_menu(database_id);
+	}
+	
+	
+
+  
+}
+
+void set_credentials(const char *username, const char *password, int database_id){
+
+	printf("Username %s\n", username);
+	printf("password %s\n", password);
+
 }
 
 
-void database_main_menu(char *database){
+int get_credentials_config(int database_id){
+	return 1;
+}
+
+
+void database_main_menu(int database_id){
 	clear();
 	int option = 0;
 	do{
@@ -50,32 +77,7 @@ void database_main_menu(char *database){
 	}while(option > 5);
 }
 
-void mysql_get_credentials(void) {
 
-	if(mysql_get_credentials_config){
-		char username[20];
-		printf("%s\n", "Please enter your database username: ");
-		scanf("%s", username);
-		char *password = getpass("Please enter your database password: \n");
-
-		char choiceSave[1];
-		while(choiceSave[0] != 'y' && choiceSave[0] != 'n'){
-			printf("%s\n", "Do want to save your credentials and don't ask for them again? (y/n):");
-			scanf("%s", choiceSave);
-			printf("%s\n", choiceSave);
-		}
-		
-		if(choiceSave[0] == 'y')
-			set_credentials(username, password);
-		database_main_menu("mysql");
-	} else {
-		database_main_menu("mysql");
-	}
-	
-	
-
-  
-}
 
 int main_menu(void){
 
@@ -108,11 +110,12 @@ int main(int argc, char *argv[]){
 		switch (choice_database){
 			case 1:
 				clear();
-				mysql_get_credentials();
+				get_credentials_from_user_input(MYSQL_ID);
 				break;
 
 			case 2:
 				clear();
+				get_credentials_from_user_input(POSTGRESQL_ID);
 				break;
 			case 3:
 				printf("%s\n", "Bye bye");

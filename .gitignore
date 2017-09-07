@@ -10,3 +10,4 @@ ioctl
 *.cmd
 build/
 install
+src/seqgen
