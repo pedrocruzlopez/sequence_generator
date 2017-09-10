@@ -2,6 +2,8 @@
 #include "seqgen.h"
 #include <unistd.h>
 
+ 
+
 
 void print_help(void)
 {
@@ -21,7 +23,7 @@ void get_credentials_from_user_input(int database_id) {
 
 	if(get_credentials_config(database_id)){
 		char username[20];
-		printf("%s\n", "Please enter your database username: ");
+		printf("Please enter your %s username: \n", get_database_name(database_id));
 		scanf("%s", username);
 		char *password = getpass("Please enter your database password: \n");
 
@@ -33,7 +35,7 @@ void get_credentials_from_user_input(int database_id) {
 		}
 		
 		if(choice_save[0] == 'y')
-			set_credentials(username, password, MYSQL_ID);
+			set_credentials(username, password, database_id);
 		database_main_menu(database_id);
 	} else {
 		database_main_menu(database_id);
@@ -77,6 +79,24 @@ void database_main_menu(int database_id){
 	}while(option > 5);
 }
 
+char *get_database_name(int database_id){
+
+	char *database_name;
+	switch (database_id){
+			case MYSQL_ID:
+				database_name = "MySQL";
+				break;
+
+			case POSTGRESQL_ID:
+				database_name = "PostgreSQL";
+				break;
+			default:
+				printf("%s\n", "Bye bye");
+
+	}
+	return database_name;
+
+}
 
 
 int main_menu(void){
@@ -100,31 +120,126 @@ int main_menu(void){
 
 	return option;
 }
+
+bool check_command (const char *cmd){
+
+	/*if(strchr(cmd, '/')){
+				
+		if(access(cmd, 1)==0)
+			return 1;
+	}
+
+	const char *path = getenv("PATH");
+	printf("%s\n", path);
+	if(!path) return 0;
+
+	char *buf = malloc(strlen(path)+strlen(cmd)+3);
+
+	if(!buf) return 0;
+
+	for(; *path; ++path){
+		char *buf_ptr = buf;
+		for(; *path && *path != ':' ; ++path, ++buf_ptr){
+			*buf_ptr = *path;
+		}
+		if(buf_ptr==buf) *buf_ptr++='.';
+
+		if(buf_ptr[-1]!='/') *buf_ptr++='/';
+		strcpy(buf_ptr, cmd);
+
+		if(access(buf, 1)==0){
+			free(buf);
+			return 0;
+		}
+		if(!*path) break;
+
+	}
+	free(buf);
+	return 0;*/
+
+	if(strchr(cmd, '/')) {
+        // if cmd includes a slash, no path search must be performed,
+        // go straight to checking if it's executable
+        return access(cmd, X_OK)==0;
+    }
+    const char *path = getenv("PATH");
+    if(!path) return false; // something is horribly wrong...
+    // we are sure we won't need a buffer any longer
+    char *buf = malloc(strlen(path)+strlen(cmd)+3);
+    if(!buf) return false; // actually useless, see comment
+    // loop as long as we have stuff to examine in path
+    for(; *path; ++path) {
+        // start from the beginning of the buffer
+        char *p = buf;
+        // copy in buf the current path element
+        for(; *path && *path!=':'; ++path,++p) {
+            *p = *path;
+        }
+        // empty path entries are treated like "."
+        if(p==buf) *p++='.';
+        // slash and command name
+        if(p[-1]!='/') *p++='/';
+        strcpy(p, cmd);
+        // check if we can execute it
+        if(access(buf, X_OK)==0) {
+            free(buf);
+            return true;
+        }
+        // quit at last cycle
+        if(!*path) break;
+    }
+    // not found
+    free(buf);
+    return false;
+
+}
+
+int check_if_server_installed (int database_id){
+
+	int installed = 0;
+	switch (database_id){
+		case MYSQL_ID:
+			installed = check_command(MYSQL_BIN);
+			break;
+		case POSTGRESQL_ID:
+			installed = check_command(POSTGRESQL_BIN);
+			break;
+
+		default:
+			installed = 0;
+
+	}
+
+	return installed;
+
+}
+
+
+
+
 int main(int argc, char *argv[]){
 
+	int var = check_if_server_installed(POSTGRESQL_ID);
+	printf("%d\n", var);
+	//getenv()
 
-	
-	int choice_database;	
+	/*int choice_database;	
 	do{
 		choice_database = main_menu();
 		switch (choice_database){
-			case 1:
+			case MYSQL_ID:
 				clear();
 				get_credentials_from_user_input(MYSQL_ID);
 				break;
 
-			case 2:
+			case POSTGRESQL_ID:
 				clear();
 				get_credentials_from_user_input(POSTGRESQL_ID);
 				break;
-			case 3:
+			default:
 				printf("%s\n", "Bye bye");
 
 		}
 
-	}while(choice_database < 3);
-
-
-	
-
+	}while(choice_database < 3);*/
 }

@@ -16,7 +16,7 @@
  * Is the device open right now? Used to prevent
  * concurent access into the same device 
  */
-static int _device_open = 0;
+static int __device_open = 0;
 
 
 int sequences[11];
@@ -35,10 +35,10 @@ static int device_open(struct inode *inode, struct file *file){
 	/* 
 	 * We don't want to talk to two processes at the same time 
 	 */
-	if (_device_open)
+	if (__device_open)
 		return -EBUSY;
 
-	_device_open++;
+	__device_open++;
 		
 	
 	try_module_get(THIS_MODULE);
@@ -54,7 +54,7 @@ static int device_release(struct inode *inode, struct file *file)
 	/* 
 	 * We're now ready for our next caller 
 	 */
-	_device_open--;
+	__device_open--;
 
 	module_put(THIS_MODULE);
 	return SUCCESS;
@@ -76,7 +76,7 @@ static int device_release(struct inode *inode, struct file *file)
  * calling process), the ioctl call returns the output of this function.
  *
  */
-long  device_ioctl(	struct file *file,	 unsigned int ioctl_num, unsigned long ioctl_param)
+long  device_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
 
 	__put_user(sequences[ioctl_num], (int *)ioctl_param);
