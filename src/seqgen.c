@@ -99,20 +99,48 @@ char *get_database_name(int database_id){
 }
 
 
-int main_menu(void){
+int main_menu(int mysql_installed, int postresql_installed){
 
 	clear();
 	int option = 0;
 
+
 	do{
 
-		printf("%s\n", "Please choose your database : ");
-		printf("%s\n", "1) MySQL Server");
-		printf("%s\n", "2) PostgreSQL");
-		printf("%s\n", "3) Exit");
+		
+		if(mysql_installed && postresql_installed){
+			printf("%s\n", "Please choose your database : ");
+			printf("%s\n", "1) MySQL Server");
+			printf("%s\n", "2) PostgreSQL");
+			printf("%s\n", "3) Exit");	
+			scanf("%d", &option);
+		} else if( mysql_installed) {
+			printf("%s\n", "Please choose your database : ");
+			printf("%s\n", "1) MySQL Server");
+			printf("%s\n", "2) Exit");
+
+			scanf("%d", &option);
+			if(option == 2)
+				option = 3;
+		} else if( postresql_installed){
+			printf("%s\n", "Please choose your database : ");
+			printf("%s\n", "1) PostgreSQL");
+			printf("%s\n", "2) Exit");
+			scanf("%d", &option);
+			if(option == 1){
+				option = 2;
+			} else {
+				option = 3;
+			}
+		} else{
+			printf("%s\n", "Seems like you don't have any database server installed, press any key to exit");
+		    scanf("%d", &option);
+			option = 3;
+		}
+		
 
 
-		scanf("%d", &option);
+		
 
 		
 
@@ -219,13 +247,11 @@ int check_if_server_installed (int database_id){
 
 int main(int argc, char *argv[]){
 
-	int var = check_if_server_installed(POSTGRESQL_ID);
-	printf("%d\n", var);
-	//getenv()
-
-	/*int choice_database;	
+	int choice_database;
+	int mysql_installed = check_if_server_installed(MYSQL_ID);
+	int postresql_installed = check_if_server_installed(POSTGRESQL_ID);
 	do{
-		choice_database = main_menu();
+		choice_database = main_menu(mysql_installed, postresql_installed);
 		switch (choice_database){
 			case MYSQL_ID:
 				clear();
@@ -241,5 +267,5 @@ int main(int argc, char *argv[]){
 
 		}
 
-	}while(choice_database < 3);*/
+	}while(choice_database < 3);
 }

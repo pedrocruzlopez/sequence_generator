@@ -68,7 +68,7 @@ char *get_database_name(int database_id);
 
 
 /* Main menu of the app */
-int main_menu(void);
+int main_menu(int mysql_installed, int postresql_installed);
 
 
 
