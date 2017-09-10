@@ -232,7 +232,6 @@ int check_if_server_installed (int database_id){
 		case POSTGRESQL_ID:
 			installed = check_command(POSTGRESQL_BIN);
 			break;
-
 		default:
 			installed = 0;
 
