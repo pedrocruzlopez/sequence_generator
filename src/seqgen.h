@@ -40,10 +40,13 @@
 #define MYSQL_ENVIRONMENT_INSTALLED "MYSQL_ENVIRONMENT_INSTALLED"
 #define POSTGRESQL_ENVIRONMENT_INSTALLED "POSTGRESQL_ENVIRONMENT_INSTALLED"
 
-#define INSTALLED 1;
-#define NOT_INSTALLED 0;
+#define INSTALLED 1
+#define NOT_INSTALLED 0
 
 #define STATE_CONFIG_FILE_NAME "database_state.cnf"
+
+#define SUCCESS_WRITE 1
+#define FAIL_WRITE 0
 
 
 /* Print help for commands */
@@ -126,9 +129,9 @@ void create_and_execute_ddl(int database_id);
 
 void install_app ();
 
-int read_state_database(int database_id);
+int read_database_state(int database_id);
 
-void write_state_database (int database_id);
+int write_database_state (int database_id, int state);
 
 unsigned int check_install_state ();
 

@@ -221,8 +221,63 @@ int insmod(int database_id){
 	return execute;
 }
 
+int write_database_state (int database_id, int state){
+	
+	int other_state ;
+	
+	char *mysql_line = malloc(strlen(MYSQL_ENVIRONMENT_INSTALLED) + strlen("=")+ sizeof(char)*10 + 1);
+	char *postgresql_line  = malloc(strlen(POSTGRESQL_ENVIRONMENT_INSTALLED) + strlen("=")+ sizeof(char)*10 + 1);	
 
-int read_state_database (int database_id){
+	strcpy(mysql_line, MYSQL_ENVIRONMENT_INSTALLED);
+    strcat(mysql_line, "=");
+	
+	strcpy(postgresql_line, POSTGRESQL_ENVIRONMENT_INSTALLED);
+	strcat(postgresql_line, "=");
+
+	char mysql_state[10];
+	char postgresql_state[10];
+
+	switch(database_id){
+		case MYSQL_ID:
+			other_state = read_database_state(POSTGRESQL_ID);
+			sprintf(postgresql_state, "%d", other_state);
+			strcat(postgresql_line, postgresql_state);
+			sprintf(mysql_state, "%d", state);
+			strcat(mysql_line, mysql_state);
+
+			break;
+		case POSTGRESQL_ID:
+			other_state = read_database_state(MYSQL_ID);
+			sprintf(mysql_state, "%d", other_state);
+			strcat(mysql_line, mysql_state);
+			sprintf(postgresql_state, "%d", state);
+			strcat(postgresql_line, postgresql_state);
+			break;
+		default:
+			return FAIL_WRITE;
+	}
+
+	printf("%s\n", mysql_line);
+	printf("%s\n", postgresql_line);
+
+	FILE *config_file ;
+	config_file = fopen(STATE_CONFIG_FILE_NAME, "w");
+	if(!config_file)
+		return FAIL_WRITE;
+	fprintf(config_file, "%s\n", mysql_line);
+	fprintf(config_file, "%s\n", postgresql_line);
+
+	free(mysql_line);
+	free(postgresql_line);
+
+	fclose(config_file);
+	return SUCCESS_WRITE;
+
+
+}
+
+
+int read_database_state (int database_id){
 
 	char *database_config_var;
 	switch (database_id){
@@ -278,8 +333,8 @@ int read_state_database (int database_id){
 
 int main(int argc, char *argv[]){
 
-	int state = read_state_database(MYSQL_ID);
-	printf("%d\n", state);
+
+
 	/*int choice_database;
 	int mysql_installed = check_if_server_installed(MYSQL_ID);
 	int postresql_installed = check_if_server_installed(POSTGRESQL_ID);
