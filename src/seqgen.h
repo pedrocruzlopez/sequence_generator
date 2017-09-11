@@ -34,6 +34,18 @@
 
 #define	X_OK 1 
 
+#define SUCCESS_INSMOD 0
+#define FAIL_INSMOD 256
+
+#define MYSQL_ENVIRONMENT_INSTALLED "MYSQL_ENVIRONMENT_INSTALLED"
+#define POSTGRESQL_ENVIRONMENT_INSTALLED "POSTGRESQL_ENVIRONMENT_INSTALLED"
+
+#define INSTALLED 1;
+#define NOT_INSTALLED 0;
+
+#define STATE_CONFIG_FILE_NAME "database_state.cnf"
+
+
 /* Print help for commands */
 void print_help(void);
 
@@ -81,10 +93,10 @@ int check_if_server_installed (int database_id);
 
 
 /* this method is called every time that computer starts */
-void insmod (int database_id);
+int insmod (int database_id);
 
 /* this methods is called every time that computer shuts down */
-void rmmod (int database_id);
+int rmmod (int database_id);
 
 /* this methods should be self-explanatory */
 void create_sequence (int database_id, int sequence_number,  int initial_value);
@@ -114,7 +126,9 @@ void create_and_execute_ddl(int database_id);
 
 void install_app ();
 
-void save_install_state ();
+int read_state_database(int database_id);
+
+void write_state_database (int database_id);
 
 unsigned int check_install_state ();
 
@@ -124,6 +138,8 @@ unsigned int check_install_state ();
 unsigned int mysql_execute_query(char *query);
 
 unsigned int postgresql_execute_query(char *query);
+
+void init_app (void);
 
 
 

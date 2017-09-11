@@ -59,6 +59,25 @@ int get_credentials_config(int database_id){
 }
 
 
+char *get_database_name(int database_id){
+
+	char *database_name;
+	switch (database_id){
+			case MYSQL_ID:
+				database_name = "MySQL";
+				break;
+
+			case POSTGRESQL_ID:
+				database_name = "PostgreSQL";
+				break;
+			default:
+				printf("%s\n", "Bye bye");
+
+	}
+	return database_name;
+
+}
+
 void database_main_menu(int database_id){
 	clear();
 	int option = 0;
@@ -79,24 +98,7 @@ void database_main_menu(int database_id){
 	}while(option > 5);
 }
 
-char *get_database_name(int database_id){
 
-	char *database_name;
-	switch (database_id){
-			case MYSQL_ID:
-				database_name = "MySQL";
-				break;
-
-			case POSTGRESQL_ID:
-				database_name = "PostgreSQL";
-				break;
-			default:
-				printf("%s\n", "Bye bye");
-
-	}
-	return database_name;
-
-}
 
 
 int main_menu(int mysql_installed, int postresql_installed){
@@ -151,64 +153,26 @@ int main_menu(int mysql_installed, int postresql_installed){
 
 bool check_command (const char *cmd){
 
-	/*if(strchr(cmd, '/')){
-				
-		if(access(cmd, 1)==0)
-			return 1;
-	}
-
-	const char *path = getenv("PATH");
-	printf("%s\n", path);
-	if(!path) return 0;
-
-	char *buf = malloc(strlen(path)+strlen(cmd)+3);
-
-	if(!buf) return 0;
-
-	for(; *path; ++path){
-		char *buf_ptr = buf;
-		for(; *path && *path != ':' ; ++path, ++buf_ptr){
-			*buf_ptr = *path;
-		}
-		if(buf_ptr==buf) *buf_ptr++='.';
-
-		if(buf_ptr[-1]!='/') *buf_ptr++='/';
-		strcpy(buf_ptr, cmd);
-
-		if(access(buf, 1)==0){
-			free(buf);
-			return 0;
-		}
-		if(!*path) break;
-
-	}
-	free(buf);
-	return 0;*/
-
 	if(strchr(cmd, '/')) {
-        // if cmd includes a slash, no path search must be performed,
-        // go straight to checking if it's executable
         return access(cmd, X_OK)==0;
     }
     const char *path = getenv("PATH");
-    if(!path) return false; // something is horribly wrong...
-    // we are sure we won't need a buffer any longer
+    if(!path) return false; 
     char *buf = malloc(strlen(path)+strlen(cmd)+3);
-    if(!buf) return false; // actually useless, see comment
-    // loop as long as we have stuff to examine in path
+    if(!buf) return false; 
     for(; *path; ++path) {
-        // start from the beginning of the buffer
+        
         char *p = buf;
-        // copy in buf the current path element
+        
         for(; *path && *path!=':'; ++path,++p) {
             *p = *path;
         }
-        // empty path entries are treated like "."
+        
         if(p==buf) *p++='.';
-        // slash and command name
+        
         if(p[-1]!='/') *p++='/';
         strcpy(p, cmd);
-        // check if we can execute it
+        
         if(access(buf, X_OK)==0) {
             free(buf);
             return true;
@@ -241,12 +205,82 @@ int check_if_server_installed (int database_id){
 
 }
 
+int insmod(int database_id){
+
+	int execute = FAIL_INSMOD;
+	switch(database_id){
+		case MYSQL_ID:
+			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
+			break;
+		case POSTGRESQL_ID:
+			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
+			break;
+		default:
+			execute = FAIL_INSMOD;
+	}
+	return execute;
+}
+
+
+int read_state_database (int database_id){
+
+	char *database_config_var;
+	switch (database_id){
+		case MYSQL_ID:
+			database_config_var = MYSQL_ENVIRONMENT_INSTALLED;
+			break;
+		case POSTGRESQL_ID:
+			database_config_var = POSTGRESQL_ENVIRONMENT_INSTALLED;
+			break;
+		default:
+			return -1;
+	}
+
+	FILE *config_file;
+	char *database_line = NULL;
+	config_file = fopen(STATE_CONFIG_FILE_NAME, "r");
+	char read;
+	size_t len = 0;
+	unsigned int state;
+	if (!config_file)
+		return -1;
+	while((read = getline(&database_line, &len, config_file)) != -1){
+		char *temp_line=malloc(strlen(database_line)+1);
+		strcpy(temp_line, database_line);
+		char *var_name = strtok(temp_line, "=");
+		if(strcmp(database_config_var, var_name)==0){
+			char *state_token ;
+			state_token = strtok(database_line, "=");
+			int counter_tokens = 0;
+			while(state_token!=NULL){
+				if(counter_tokens == 1)
+					sscanf(state_token, "%d", &state);
+					
+
+				state_token = strtok(NULL, "=");
+				counter_tokens++;
+			}	
+		}
+		free(temp_line);
+	}
+
+	if(database_line)
+		free(database_line);
+	
+	fclose(config_file);
+
+	return state;
+	
+
+}
 
 
 
 int main(int argc, char *argv[]){
 
-	int choice_database;
+	int state = read_state_database(MYSQL_ID);
+	printf("%d\n", state);
+	/*int choice_database;
 	int mysql_installed = check_if_server_installed(MYSQL_ID);
 	int postresql_installed = check_if_server_installed(POSTGRESQL_ID);
 	do{
@@ -266,5 +300,5 @@ int main(int argc, char *argv[]){
 
 		}
 
-	}while(choice_database < 3);
+	}while(choice_database < 3);*/
 }
