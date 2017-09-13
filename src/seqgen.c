@@ -90,7 +90,7 @@ void database_main_menu(int database_id){
 
 			if(insmod(database_id)==SUCCESS_INSMOD){
 
-   				if(mysql_execute_query(CREATE_FUNCTION_MYSQL_QUERY)==SUCCESS){
+   				if(execute_query(database_id, CREATE_FUNCTION)==SUCCESS){
 
    					write_database_state(database_id, INSTALLED);
    				} else {
@@ -345,6 +345,37 @@ int read_database_state (int database_id){
 	return state;
 	
 
+}
+unsigned int execute_query(int database_id, int type){
+	unsigned int status = FAIL ;
+	switch (database_id){
+		case MYSQL_ID:
+			switch(type){
+				case CREATE_FUNCTION:
+					status = mysql_execute_query(CREATE_FUNCTION_MYSQL_QUERY);
+					break;
+				case SELECT_INITIAL:
+					status = mysql_execute_query(SELECT_MYSQL_GET_SEQUENCE);
+					break;
+				default:
+					return FAIL;
+			}
+
+			break;
+		case POSTGRESQL_ID:
+			switch(type){
+				case CREATE_FUNCTION:
+					break;
+				case SELECT_INITIAL:
+					break;
+				default:
+					return FAIL;
+			}
+			break;
+		default:
+			return FAIL;
+
+	}
 }
 
 unsigned int mysql_execute_query(char *query){

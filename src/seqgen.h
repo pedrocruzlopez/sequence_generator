@@ -54,6 +54,9 @@
 #define SUCCESS 1
 #define FAIL 0
 
+#define CREATE_FUNCTION 1
+#define SELECT_INITIAL 2
+
 /* Print help for commands */
 void print_help(void);
 
@@ -142,6 +145,8 @@ unsigned int check_install_state ();
 
 
 /* methods to execute query on each database */
+
+unsigned int execute_query(int database_id, int type);
 
 unsigned int mysql_execute_query(char *query);
 
