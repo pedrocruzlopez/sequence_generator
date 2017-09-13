@@ -48,6 +48,11 @@
 #define SUCCESS_WRITE 1
 #define FAIL_WRITE 0
 
+#define CREATE_FUNCTION_MYSQL_QUERY "CREATE FUNCTION get_sequence RETURNS integer SONAME \"mysql_get_sequence.so\";"
+#define SELECT_MYSQL_GET_SEQUENCE "select get_sequence(1);"
+
+#define SUCCESS 1
+#define FAIL 0
 
 /* Print help for commands */
 void print_help(void);

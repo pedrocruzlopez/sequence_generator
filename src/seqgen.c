@@ -2,6 +2,9 @@
 #include "seqgen.h"
 #include <unistd.h>
 
+#ifdef __MYSQL_H__
+#include <mysql.h>
+#endif
  
 
 
@@ -83,19 +86,37 @@ void database_main_menu(int database_id){
 	int option = 0;
 	do{
 
+		if(read_database_state(database_id)!=INSTALLED){
+
+			if(insmod(database_id)==SUCCESS_INSMOD){
+
+   				if(mysql_execute_query(CREATE_FUNCTION_MYSQL_QUERY)==SUCCESS){
+
+   					write_database_state(database_id, INSTALLED);
+   				} else {
+   					//remove modules
+   					printf("%s\n", "A fatal error has occurred, please reinstall the app");
+					exit(1);
+   				}
+
+				
+			} else {
+				printf("%s\n", "A fatal error has occurred, please reinstall the app");
+				exit(1);
+			}
+
+
+		} 
+		
 		printf("%s\n", "Select option : ");
 		printf("%s\n", "1) Create sequence");
 		printf("%s\n", "2) Update sequence");
 		printf("%s\n", "3) Restart sequence");
 		printf("%s\n", "4) Get current number");
 		printf("%s\n", "5) Generate UUID");
-
-
 		scanf("%d", &option);
 
-		
-
-	}while(option > 5);
+	} while(option > 5);
 }
 
 
@@ -257,9 +278,6 @@ int write_database_state (int database_id, int state){
 			return FAIL_WRITE;
 	}
 
-	printf("%s\n", mysql_line);
-	printf("%s\n", postgresql_line);
-
 	FILE *config_file ;
 	config_file = fopen(STATE_CONFIG_FILE_NAME, "w");
 	if(!config_file)
@@ -329,13 +347,49 @@ int read_database_state (int database_id){
 
 }
 
+unsigned int mysql_execute_query(char *query){
+
+#ifdef __MYSQL_H__
+   MYSQL *conn;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+
+   char *server = "localhost";
+   char *user = "root";
+   char *password = "12345"; 
+   char *database = "mysql";
+
+   conn = mysql_init(NULL);
+
+   /* Connect to database */
+   if (!mysql_real_connect(conn, server,
+         user, password, database, 0, NULL, 0)) {
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      exit(1);
+   }
+
+   /* send SQL query */
+   if (mysql_query(conn, query)) {
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      exit(1);
+   }
+
+   res = mysql_use_result(conn);
+
+   /* close connection */
+   mysql_free_result(res);
+   mysql_close(conn);
+   return SUCCESS;
+#else
+   printf("%s\n", "Seems like you don't have MySQL installed");
+   return FAIL;
+#endif
+
+}
 
 
 int main(int argc, char *argv[]){
-
-
-
-	/*int choice_database;
+	int choice_database;
 	int mysql_installed = check_if_server_installed(MYSQL_ID);
 	int postresql_installed = check_if_server_installed(POSTGRESQL_ID);
 	do{
@@ -355,5 +409,5 @@ int main(int argc, char *argv[]){
 
 		}
 
-	}while(choice_database < 3);*/
+	}while(choice_database < 3);
 }
