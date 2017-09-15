@@ -16,7 +16,9 @@
 #include <errno.h>
 #include <stdbool.h>
 
-#define APP_NAME "Numeric Sequence & UUID Generator"
+
+
+#define APP_NAME "seqgen"
 
 #define clear() printf("\033[H\033[J")
 
@@ -57,6 +59,15 @@
 #define CREATE_FUNCTION 1
 #define SELECT_INITIAL 2
 
+#define MYSQL_DEVICE_FILE_PATH "/dev/mysql_seq_dev"
+#define MYSQL_HANDLER_FILE_PATH "/dev/mysql_seq_handler"
+
+
+typedef struct
+{
+	int offset; //Position of the n element to read or write
+	int value ; //Value to send or comes from user
+} sequence_request;
 
 void write_log(const char *event);
 
@@ -86,7 +97,11 @@ int get_credentials_config(int database_id);
 	@params : database id
 */
 
-void database_main_menu(int database_id);
+int database_main_menu(int database_id);
+
+void execute_option(int database_id, int option);
+void execute_mysql_option(int option);
+void execute_postgresql_option(int option);
 
 
 char *get_database_name(int database_id);
@@ -157,6 +172,10 @@ unsigned int mysql_execute_query(char *query);
 unsigned int postgresql_execute_query(char *query);
 
 void init_app (void);
+
+/* ioctl methods */
+
+int ioctl_get_seq(int file_desc, int sequence_offset);
 
 
 

@@ -1,6 +1,7 @@
 
 #include "seqgen.h"
 #include <unistd.h>
+#include <sys/ioctl.h>		/* ioctl */
 
 #ifdef __MYSQL_H__
 #include <mysql.h>
@@ -8,7 +9,58 @@
  
 
 void write_log(const char *event){
+	//TODO : Write a file for register every event
+}
 
+void execute_mysql_option(int option){
+	clear();
+	int offset;
+	int exit_val;
+	switch(option){
+		case NEW_SEQ:
+			//TODO: Implement new seq methods
+			break;
+		case UPDATE_SEQ:
+			//TODO: Implement update 
+			break;
+		case RESTART_SEQ:
+			//TODO: implement restart
+			break;
+		case GET_SEQ:
+			printf("%s\n", "Please select the number of sequence");
+			scanf("%d", &offset);
+			do{
+				get_current_value(MYSQL_ID, offset);
+				printf("%s\n", "Press any key");
+				scanf("%d", &exit_val);
+				exit_val = 0;
+			} while (exit_val != 0);
+			
+
+			break;
+		case GEN_UUID:
+			//TODO: implement uuid
+			break;
+		default:
+			exit(EXIT_FAILURE);
+
+	}
+}
+void execute_postgresql_option(int option){
+	//TODO : implement postgreSQL options
+}
+void execute_option(int database_id, int option){
+	switch(database_id){
+		case MYSQL_ID:
+			execute_mysql_option(option);
+			break;
+		case POSTGRESQL_ID:
+			execute_postgresql_option(option);
+			break;
+		default:
+			exit(EXIT_FAILURE);
+
+	}
 }
 
 void get_credentials_from_user_input(int database_id) {
@@ -28,10 +80,14 @@ void get_credentials_from_user_input(int database_id) {
 		
 		if(choice_save[0] == 'y')
 			set_credentials(username, password, database_id);
-		database_main_menu(database_id);
-	} else {
-		database_main_menu(database_id);
-	}
+		
+	} 
+	
+	int exec_option ;
+	do{
+		 exec_option = database_main_menu(database_id);
+		 execute_option(database_id, exec_option);
+	} while(exec_option != 6);
 	
 	
 
@@ -40,6 +96,7 @@ void get_credentials_from_user_input(int database_id) {
 
 void set_credentials(const char *username, const char *password, int database_id){
 
+	//TODO: Save credentials of database
 	printf("Username %s\n", username);
 	printf("password %s\n", password);
 
@@ -47,6 +104,7 @@ void set_credentials(const char *username, const char *password, int database_id
 
 
 int get_credentials_config(int database_id){
+	//TODO: get the config of credencials
 	return 1;
 }
 
@@ -70,7 +128,7 @@ char *get_database_name(int database_id){
 
 }
 
-void database_main_menu(int database_id){
+int database_main_menu(int database_id){
 	clear();
 	int option = 0;
 	do{
@@ -83,7 +141,7 @@ void database_main_menu(int database_id){
 
    					write_database_state(database_id, INSTALLED);
    				} else {
-   					//remove modules
+   					//TODO: remove modules
    					printf("%s\n", "A fatal error has occurred, please reinstall the app");
 					exit(1);
    				}
@@ -103,9 +161,12 @@ void database_main_menu(int database_id){
 		printf("%s\n", "3) Restart sequence");
 		printf("%s\n", "4) Get current number");
 		printf("%s\n", "5) Generate UUID");
+		printf("%s\n", "6) Return to main menu");
 		scanf("%d", &option);
 
-	} while(option > 5);
+	} while(option > 6);
+
+	return option;
 }
 
 
@@ -223,6 +284,7 @@ int compile_modules(int database_id){
 			execute = system("cd .. && cd modules/mysql && make");
 			break;
 		case POSTGRESQL_ID:
+			//TODO: compile postgreSQL modules
 			execute = system("cd .. && cd modules/mysql && make");
 			break;
 		default:
@@ -239,6 +301,7 @@ int insmod(int database_id){
 			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
 			break;
 		case POSTGRESQL_ID:
+			//TODO: ins postgreSQL modules
 			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
 			break;
 		default:
@@ -448,17 +511,60 @@ void init_app(void){
 
 }
 
+int ioctl_get_seq(int file_desc, int sequence_offset)
+{
+	int ret_val;
+	int seq;
+
+	ret_val = ioctl(file_desc, sequence_offset, &seq);
+
+	if (ret_val < 0) {
+		printf("ioctl_get_msg failed:%d\n", ret_val);
+		exit(EXIT_FAILURE);
+	}
+
+	printf("The current value of sequence is:%d\n", seq);
+	return ret_val;
+}
+
+unsigned int get_current_value (int database_id, int sequence_number){
+	int file_desc, ret_val;
+
+	switch (database_id){
+		case MYSQL_ID:
+			file_desc = open(MYSQL_HANDLER_FILE_PATH, 0);
+			if (file_desc < 0) {
+				printf("Can't open device file: %s\n", MYSQL_HANDLER_FILE_PATH);
+				exit(-1);
+			}
+
+			
+			ioctl_get_seq(file_desc, sequence_number);
+			
+			close(file_desc);
+			break;
+		case POSTGRESQL_ID:
+
+			break;
+
+		default:
+			exit(EXIT_FAILURE);
+	}
+	
+}
+
+
 void print_help(void)
 {
 	printf("\n Usage: %s [OPTIONS]\n\n", APP_NAME);
 	printf("  Options:\n");
-	printf("   -h --help                 			     	Print this help\n");
-	printf("   -c --cre_seq database number_sequence initial_value  Create a new sequence in the determined dbms with an initial value\n");
-	printf("   -g --get_seq database number_sequence       		Get the current number of a sequence\n");
-	printf("   -s --set_seq database number_sequence new_value      Set value for a sequence WARNING: It's recommended to stop the database service\n");
-	printf("   -r --res_seq database number_sequence                Restart sequence WARNING: It's recommended to stop the database service\n");
-	printf("   -d --del_seq database number_sequence                Delete sequence and clean space for a new one WARNING: It's recommended to stop the database service\n");
-	printf("   -u --uuid                                            Generate UUID\n");
+	printf("   -h --help                 			     	Print this help\n\n");
+	printf("   -c --cre_seq database number_sequence initial_value  Create a new sequence in the determined dbms with an initial value\n\n");
+	printf("   -g --get_seq database number_sequence       		Get the current number of a sequence\n\n");
+	printf("   -s --set_seq database number_sequence new_value      Set value for a sequence WARNING: It's recommended to stop the database service\n\n");
+	printf("   -r --res_seq database number_sequence                Restart sequence WARNING: It's recommended to stop the database service\n\n");
+	printf("   -d --del_seq database number_sequence                Delete sequence and clean space for a new one WARNING: It's recommended to stop the database service\n\n");
+	printf("   -u --uuid                                            Generate UUID\n\n");
 	printf("\n");
 }
 
