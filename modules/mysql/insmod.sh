@@ -1,9 +1,4 @@
 #!/bin/bash
-
-echo "Cleaning directories.."
-make clean
-echo "Compiling modules..."
-make
 echo "Installing modules..."
 insmod mysql_sequence_driver.ko
 insmod mysql_sequence_handler.ko

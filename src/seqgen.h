@@ -34,8 +34,8 @@
 
 #define	X_OK 1 
 
-#define SUCCESS_INSMOD 0
-#define FAIL_INSMOD 256
+#define SUCCESS_SYSTEM 0
+#define FAIL_SYSTEM 256
 
 #define MYSQL_ENVIRONMENT_INSTALLED "MYSQL_ENVIRONMENT_INSTALLED"
 #define POSTGRESQL_ENVIRONMENT_INSTALLED "POSTGRESQL_ENVIRONMENT_INSTALLED"
@@ -56,6 +56,9 @@
 
 #define CREATE_FUNCTION 1
 #define SELECT_INITIAL 2
+
+
+void write_log(const char *event);
 
 /* Print help for commands */
 void print_help(void);
@@ -102,6 +105,7 @@ bool check_command (const char *cmd);
 /* check if database server is installed */
 int check_if_server_installed (int database_id);
 
+int compile_modules(int database_id);
 
 /* this method is called every time that computer starts */
 int insmod (int database_id);

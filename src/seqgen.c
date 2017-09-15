@@ -7,19 +7,8 @@
 #endif
  
 
+void write_log(const char *event){
 
-void print_help(void)
-{
-	printf("\n Usage: %s [OPTIONS]\n\n", APP_NAME);
-	printf("  Options:\n");
-	printf("   -h --help                 			     			Print this help\n");
-	printf("   -c --cre_seq database number_sequence initial_value  Create a new sequence in the determined dbms with an initial value\n");
-	printf("   -g --get_seq database number_sequence       		    Get the current number of a sequence\n");
-	printf("   -s --set_seq database number_sequence new_value      Set value for a sequence WARNING: It's recommended to stop the database service\n");
-	printf("   -r --res_seq database number_sequence                Restart sequence WARNING: It's recommended to stop the database service\n");
-	printf("   -d --del_seq database number_sequence                Delete sequence and clean space for a new one WARNING: It's recommended to stop the database service\n");
-	printf("   -u --uuid                                            Generate UUID\n");
-	printf("\n");
 }
 
 void get_credentials_from_user_input(int database_id) {
@@ -88,7 +77,7 @@ void database_main_menu(int database_id){
 
 		if(read_database_state(database_id)!=INSTALLED){
 
-			if(insmod(database_id)==SUCCESS_INSMOD){
+			if(compile_modules(database_id)==SUCCESS_SYSTEM && insmod(database_id)==SUCCESS_SYSTEM){
 
    				if(execute_query(database_id, CREATE_FUNCTION)==SUCCESS){
 
@@ -226,9 +215,25 @@ int check_if_server_installed (int database_id){
 
 }
 
+int compile_modules(int database_id){
+
+	int execute = FAIL_SYSTEM;
+	switch(database_id){
+		case MYSQL_ID:
+			execute = system("cd .. && cd modules/mysql && make");
+			break;
+		case POSTGRESQL_ID:
+			execute = system("cd .. && cd modules/mysql && make");
+			break;
+		default:
+			execute = FAIL_SYSTEM;
+	}
+	return execute;
+}
+
 int insmod(int database_id){
 
-	int execute = FAIL_INSMOD;
+	int execute = FAIL_SYSTEM;
 	switch(database_id){
 		case MYSQL_ID:
 			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
@@ -237,7 +242,7 @@ int insmod(int database_id){
 			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
 			break;
 		default:
-			execute = FAIL_INSMOD;
+			execute = FAIL_SYSTEM;
 	}
 	return execute;
 }
@@ -418,8 +423,95 @@ unsigned int mysql_execute_query(char *query){
 
 }
 
+void init_app(void){
+	int mysql_state = read_database_state(MYSQL_ID);
+	int postgresql_state = read_database_state(POSTGRESQL_ID);
+
+	if(mysql_state==INSTALLED){
+
+		if(insmod(MYSQL_ID)==SUCCESS_SYSTEM){
+			write_log("modules inserted ok");
+		}else{
+			write_log("fail inserted modules");
+			write_database_state(MYSQL_ID, NOT_INSTALLED);
+		}
+	}
+	if(postgresql_state==INSTALLED){
+		if(insmod(POSTGRESQL_ID)==SUCCESS_SYSTEM){
+			write_log("modules inserted ok");
+		} else {
+			write_log("fail inserted modules");
+			write_database_state(POSTGRESQL_ID, NOT_INSTALLED);
+		}
+	}
+	
+
+}
+
+void print_help(void)
+{
+	printf("\n Usage: %s [OPTIONS]\n\n", APP_NAME);
+	printf("  Options:\n");
+	printf("   -h --help                 			     	Print this help\n");
+	printf("   -c --cre_seq database number_sequence initial_value  Create a new sequence in the determined dbms with an initial value\n");
+	printf("   -g --get_seq database number_sequence       		Get the current number of a sequence\n");
+	printf("   -s --set_seq database number_sequence new_value      Set value for a sequence WARNING: It's recommended to stop the database service\n");
+	printf("   -r --res_seq database number_sequence                Restart sequence WARNING: It's recommended to stop the database service\n");
+	printf("   -d --del_seq database number_sequence                Delete sequence and clean space for a new one WARNING: It's recommended to stop the database service\n");
+	printf("   -u --uuid                                            Generate UUID\n");
+	printf("\n");
+}
 
 int main(int argc, char *argv[]){
+
+	static struct option long_options[] = {
+		{"cre_seq", required_argument, 0, 'c'},
+		{"get_seq", required_argument, 0, 'g'},
+		{"set_seq", required_argument, 0, 's'},
+		{"res_seq", required_argument, 0, 'r'},
+		{"del_seq", required_argument, 0, 'd'},
+		{"help", no_argument, 0, 'h'},
+		{"uuid", no_argument, 0, 'u'},
+		{"init", no_argument, 0, 'i'},
+		{NULL, 0, 0, 0}
+	};
+
+	int value, option_index = 0;
+	
+	while ((value = getopt_long(argc, argv, "c:g:s:r:d:hui", long_options, &option_index)) != -1) {
+		switch (value) {
+			case 'c':
+				printf("%s\n", "create seleted");
+				break;
+			case 'g':
+				printf("%s\n", "get seleted");
+				break;
+			case 's':
+				printf("%s\n", "set seleted");
+				break;
+			case 'r':
+				printf("%s\n", "restart seleted");
+				break;
+			case 'd':
+				printf("%s\n", "deleted seleted");
+				break;
+			case 'u':
+				printf("%s\n", "uuid seleted");
+				break;
+			case 'h':
+				print_help();
+				return EXIT_SUCCESS;
+			case 'i':
+				printf("%s\n", "init app");
+				return EXIT_SUCCESS;
+			case '?':
+				print_help();
+				return EXIT_FAILURE;
+			default:
+				break;
+		}
+	}
+
 	int choice_database;
 	int mysql_installed = check_if_server_installed(MYSQL_ID);
 	int postresql_installed = check_if_server_installed(POSTGRESQL_ID);

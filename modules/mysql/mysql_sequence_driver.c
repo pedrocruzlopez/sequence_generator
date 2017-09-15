@@ -19,7 +19,7 @@
 static int __device_open = 0;
 
 
-int sequences[11];
+register int sequences[11];
 EXPORT_SYMBOL(sequences);
 
 /* 
