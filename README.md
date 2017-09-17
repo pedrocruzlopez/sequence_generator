@@ -13,32 +13,18 @@ Sequence Generator is an alternative to implement numeric auto increment & UUID 
 
 ### Installation
 
-0. Install MySQL Server or PostreSQL (even both if you will) 
-
-1. Open a terminal and install build essentials if you don't have it: 
-
-```
-sudo apt-get update
-sudo apt-get install build-essential
-```
-2. If you don't have cmake, please install it:
-
-```
-sudo apt-get install cmake
-```
-
-3. Create a folder or simply clone the project in whatever directory: 
+1. Create a folder or simply clone the project in whatever directory: 
 
 ```
 git clone https://github.com/pedrocruzlopez/sequence_generator.git
 ```
-3. Give permission to folder 
+2. Give permission to folder 
 
 ```
 chmod -R 777 /path/sequence_generator
 ```
 
-5. Execute install script
+3. Execute install script
 
 ```
 ./install.sh
