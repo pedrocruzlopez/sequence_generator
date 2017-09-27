@@ -33,10 +33,11 @@ add_subdirectory (src)
 
 # Directory with configuration files
 set (MYSQL_MODULES_DIR "/etc/sequence_generator/mysql")
+set (APP_FILES_DIR "/etc/sequence_generator")
 set (POSTGRESQL_MODULES_DIR "/etc/sequence_generator/postgresql")
 
 # Directory with systemd unit files
-set (SYSTEMD_UNIT_DIR "/etc/systemd/system/")
+set (SYSTEMD_UNIT_DIR "/etc/systemd/system")
 
 # Macro for installing configuration files
 function(install_modules src dest)
@@ -74,3 +75,6 @@ install_modules (./modules/mysql/insmod.sh ${MYSQL_MODULES_DIR})
 install_modules (./modules/mysql/rmmod.sh ${MYSQL_MODULES_DIR})
 install_modules (./modules/mysql/Makefile ${MYSQL_MODULES_DIR})
 
+install_modules (./seqgen.service ${SYSTEMD_UNIT_DIR})
+install_modules (./database_state.cnf ${APP_FILES_DIR})
+install_modules (./log ${APP_FILES_DIR})
