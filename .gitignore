@@ -13,3 +13,4 @@ install
 src/seqgen
 modules/mysql/ioctl_set
 modules/mysql/ioctl
+src/log
