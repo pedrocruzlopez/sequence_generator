@@ -2,14 +2,49 @@
 #include "seqgen.h"
 #include <unistd.h>
 #include <sys/ioctl.h>		/* ioctl */
+#include <time.h>
 
 #ifdef __MYSQL_H__
 #include <mysql.h>
 #endif
  
+void check_clags_state(int database_id){
+
+	switch(database_id){
+		case MYSQL_ID:
+			#ifdef __MYSQL_H__
+				puts("MYSQL Cflags are present");
+			#else
+				puts("MySQL Cflags are not present, I really wonder if you can do any work, so please install MYSQL and then reinstall this app");
+			#endif
+			break;
+		case POSTGRESQL_ID:
+			break;
+		default:
+			exit(EXIT_FAILURE);
+	}
+
+}
 
 void write_log(const char *event){
-	//TODO : Write a file for register every event
+	FILE *fp;
+	time_t rawtime;
+	struct tm * timeinfo;
+
+  	time ( &rawtime );
+  	timeinfo = localtime ( &rawtime );
+  	char *string_time = asctime (timeinfo);
+
+  	char *temp = malloc(strlen(event)+strlen(string_time)+1);
+  	strcpy(temp, event);
+  	strcat(temp, string_time);
+
+  	printf ( "%s\n", temp );
+
+   	
+   	fp = fopen(LOG_PATH, "a");
+   	fputs(temp, fp);
+   	fclose(fp);
 }
 
 void execute_mysql_option(int option){
@@ -48,6 +83,7 @@ void execute_mysql_option(int option){
 }
 void execute_postgresql_option(int option){
 	//TODO : implement postgreSQL options
+	printf("%d\n", option);
 }
 void execute_option(int database_id, int option){
 	switch(database_id){
@@ -87,7 +123,7 @@ void get_credentials_from_user_input(int database_id) {
 	do{
 		 exec_option = database_main_menu(database_id);
 		 execute_option(database_id, exec_option);
-	} while(exec_option != 6);
+	} while(exec_option < 6);
 	
 	
 
@@ -99,19 +135,21 @@ void set_credentials(const char *username, const char *password, int database_id
 	//TODO: Save credentials of database
 	printf("Username %s\n", username);
 	printf("password %s\n", password);
+	printf("database_id %d\n", database_id);
 
 }
 
 
 int get_credentials_config(int database_id){
 	//TODO: get the config of credencials
+	printf("database_id %d\n", database_id);
 	return 1;
 }
 
 
 char *get_database_name(int database_id){
 
-	char *database_name;
+	char *database_name = "";
 	switch (database_id){
 			case MYSQL_ID:
 				database_name = "MySQL";
@@ -161,7 +199,7 @@ int database_main_menu(int database_id){
 		printf("%s\n", "3) Restart sequence");
 		printf("%s\n", "4) Get current number");
 		printf("%s\n", "5) Generate UUID");
-		printf("%s\n", "6) Return to main menu");
+		printf("%s\n", "6) Exit");
 		scanf("%d", &option);
 
 	} while(option > 6);
@@ -281,7 +319,7 @@ int compile_modules(int database_id){
 	int execute = FAIL_SYSTEM;
 	switch(database_id){
 		case MYSQL_ID:
-			execute = system("cd .. && cd modules/mysql && make");
+			execute = system(COMPILE_MYSQL_MODULES_COMMAND);
 			break;
 		case POSTGRESQL_ID:
 			//TODO: compile postgreSQL modules
@@ -298,7 +336,7 @@ int insmod(int database_id){
 	int execute = FAIL_SYSTEM;
 	switch(database_id){
 		case MYSQL_ID:
-			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
+			execute = system(INSMOD_MYSQL_MODULES_COMMAND);
 			break;
 		case POSTGRESQL_ID:
 			//TODO: ins postgreSQL modules
@@ -382,7 +420,7 @@ int read_database_state (int database_id){
 	config_file = fopen(STATE_CONFIG_FILE_NAME, "r");
 	char read;
 	size_t len = 0;
-	unsigned int state;
+	int state;
 	if (!config_file)
 		return -1;
 	while((read = getline(&database_line, &len, config_file)) != -1){
@@ -444,6 +482,7 @@ unsigned int execute_query(int database_id, int type){
 			return FAIL;
 
 	}
+	return status;
 }
 
 unsigned int mysql_execute_query(char *query){
@@ -451,7 +490,7 @@ unsigned int mysql_execute_query(char *query){
 #ifdef __MYSQL_H__
    MYSQL *conn;
    MYSQL_RES *res;
-   MYSQL_ROW row;
+   
 
    char *server = "localhost";
    char *user = "root";
@@ -527,8 +566,8 @@ int ioctl_get_seq(int file_desc, int sequence_offset)
 	return ret_val;
 }
 
-unsigned int get_current_value (int database_id, int sequence_number){
-	int file_desc, ret_val;
+void get_current_value (int database_id, int sequence_number){
+	int file_desc;
 
 	switch (database_id){
 		case MYSQL_ID:
@@ -579,12 +618,14 @@ int main(int argc, char *argv[]){
 		{"help", no_argument, 0, 'h'},
 		{"uuid", no_argument, 0, 'u'},
 		{"init", no_argument, 0, 'i'},
+		{"end", no_argument, 0, 'e'},
+		{"test", no_argument, 0, 't'},
 		{NULL, 0, 0, 0}
 	};
 
 	int value, option_index = 0;
 	
-	while ((value = getopt_long(argc, argv, "c:g:s:r:d:hui", long_options, &option_index)) != -1) {
+	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huiet", long_options, &option_index)) != -1) {
 		switch (value) {
 			case 'c':
 				printf("%s\n", "create seleted");
@@ -609,6 +650,14 @@ int main(int argc, char *argv[]){
 				return EXIT_SUCCESS;
 			case 'i':
 				printf("%s\n", "init app");
+				write_log("Init app ");
+				return EXIT_SUCCESS;
+			case 'e':
+				printf("%s\n", "exit app");
+				write_log("Exit app ");
+				return EXIT_SUCCESS;
+			case 't':
+				check_clags_state(MYSQL_ID);
 				return EXIT_SUCCESS;
 			case '?':
 				print_help();

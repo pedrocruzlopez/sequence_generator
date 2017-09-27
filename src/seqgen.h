@@ -45,8 +45,6 @@
 #define INSTALLED 1
 #define NOT_INSTALLED 0
 
-#define STATE_CONFIG_FILE_NAME "database_state.cnf"
-
 #define SUCCESS_WRITE 1
 #define FAIL_WRITE 0
 
@@ -62,6 +60,18 @@
 #define MYSQL_DEVICE_FILE_PATH "/dev/mysql_seq_dev"
 #define MYSQL_HANDLER_FILE_PATH "/dev/mysql_seq_handler"
 
+
+#ifdef DEV
+#define COMPILE_MYSQL_MODULES_COMMAND "cd .. && cd modules/mysql && make"
+#define INSMOD_MYSQL_MODULES_COMMAND "cd .. && cd modules/mysql && ./insmod.sh"
+#define STATE_CONFIG_FILE_NAME "database_state.cnf"
+#define LOG_PATH "log"
+#else
+#define COMPILE_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && make"
+#define INSMOD_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && ./insmod.sh"
+#define STATE_CONFIG_FILE_NAME "/etc/sequence_generator/database_state.cnf"
+#define LOG_PATH "/etc/sequence_generator/log"
+#endif
 
 typedef struct
 {
@@ -135,7 +145,7 @@ void update_sequence (int database_id, int sequence_number, int new_value);
 
 void restart_sequence (int database_id, int sequence_number);
 
-unsigned int get_current_value (int database_id, int sequence_number);
+void get_current_value (int database_id, int sequence_number);
 
 char *generate_uuid(int database_id);
 
@@ -179,3 +189,9 @@ int ioctl_get_seq(int file_desc, int sequence_offset);
 
 
 
+/*** check methodos ***/
+
+void check_clags_state(int database_id);
+
+
+/**********************/
