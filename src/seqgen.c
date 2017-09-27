@@ -8,7 +8,7 @@
 #include <mysql.h>
 #endif
  
-void check_clags_state(int database_id){
+void check_cflags_state(int database_id){
 
 	switch(database_id){
 		case MYSQL_ID:
@@ -593,6 +593,67 @@ void get_current_value (int database_id, int sequence_number){
 }
 
 
+unsigned int backup_of_data(void){
+ 	/*time_t rawtime;
+	struct tm * timeinfo;
+
+  	time ( &rawtime );
+  	timeinfo = localtime ( &rawtime );
+  	char *string_time = asctime (timeinfo);*/
+
+  	int i = 0;
+  	int array[SIZE_SEQUENCES];
+  	for(i=0; i<SIZE_SEQUENCES; i++){
+  		array[i] = i; 
+  	}
+
+  	struct sequences_backup seq_backup;
+  	strcpy(seq_backup.time_string, "Prueba");
+  	
+  	//seq_backup.sequences = ptrArray(array, SIZE_SEQUENCES);
+  	int j = 0;
+  	for (j = 0; j < SIZE_SEQUENCES; j++){
+  		seq_backup.sequences[j] = array[j];
+  	}
+  	
+
+  	FILE *backup_file;
+
+  	if((backup_file = fopen(BACKUP_PATH, "wb"))==NULL){
+  		puts("File could not be openend");
+  		return 0;
+  	} else{
+
+  		fwrite(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
+  		fclose(backup_file);
+  		puts("Backup created successfully!");
+  		return 1;
+  	}
+  	
+
+ }
+
+ unsigned int restore_data(void){
+
+ 	FILE *backup_file;
+ 	struct sequences_backup seq_backup;
+
+ 	if((backup_file = fopen(BACKUP_PATH, "rb"))==NULL){
+ 		puts("File could not be openend");
+ 		return 0;
+ 	}else{
+ 		//while(!feof(backup_file)){
+ 			fread(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
+ 			int i;
+ 			for (i=0; i<SIZE_SEQUENCES; i++){
+ 				printf("Reading sequence No. %d Value %d\n", i, seq_backup.sequences[i]);
+ 			}
+ 		//}
+ 		fclose(backup_file);
+ 		return 1;
+ 	}
+ }
+
 void print_help(void)
 {
 	printf("\n Usage: %s [OPTIONS]\n\n", APP_NAME);
@@ -620,12 +681,14 @@ int main(int argc, char *argv[]){
 		{"init", no_argument, 0, 'i'},
 		{"end", no_argument, 0, 'e'},
 		{"test", no_argument, 0, 't'},
+		{"backup", no_argument, 0, 'b'},
+		{"restore", no_argument, 0, 'y'},
 		{NULL, 0, 0, 0}
 	};
 
 	int value, option_index = 0;
 	
-	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huiet", long_options, &option_index)) != -1) {
+	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietby", long_options, &option_index)) != -1) {
 		switch (value) {
 			case 'c':
 				printf("%s\n", "create seleted");
@@ -657,7 +720,13 @@ int main(int argc, char *argv[]){
 				write_log("Exit app ");
 				return EXIT_SUCCESS;
 			case 't':
-				check_clags_state(MYSQL_ID);
+				check_cflags_state(MYSQL_ID);
+				return EXIT_SUCCESS;
+			case 'b':
+				backup_of_data();
+				return EXIT_SUCCESS;
+			case 'y':
+				restore_data();
 				return EXIT_SUCCESS;
 			case '?':
 				print_help();

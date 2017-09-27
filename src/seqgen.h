@@ -66,18 +66,27 @@
 #define INSMOD_MYSQL_MODULES_COMMAND "cd .. && cd modules/mysql && ./insmod.sh"
 #define STATE_CONFIG_FILE_NAME "database_state.cnf"
 #define LOG_PATH "log"
+#define BACKUP_PATH "sequences.backup"
 #else
 #define COMPILE_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && make"
 #define INSMOD_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && ./insmod.sh"
 #define STATE_CONFIG_FILE_NAME "/etc/sequence_generator/database_state.cnf"
 #define LOG_PATH "/etc/sequence_generator/log"
+#define BACKUP_PATH "/etc/sequence_generator/sequences.backup"
 #endif
+
+#define SIZE_SEQUENCES 11
 
 typedef struct
 {
 	int offset; //Position of the n element to read or write
 	int value ; //Value to send or comes from user
 } sequence_request;
+
+struct sequences_backup{
+	int sequences[SIZE_SEQUENCES];
+	char time_string[25];
+};
 
 void write_log(const char *event);
 
