@@ -14,3 +14,4 @@ src/seqgen
 modules/mysql/ioctl_set
 modules/mysql/ioctl
 src/log
+src/database_state.cnf
