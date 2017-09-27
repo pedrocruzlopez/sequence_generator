@@ -1,0 +1,12 @@
+[Unit]
+Description=Sequence generator service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/seqgen \
+	--init
+User=root
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
