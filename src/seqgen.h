@@ -50,7 +50,7 @@
 
 #define CREATE_FUNCTION_MYSQL_QUERY "CREATE FUNCTION get_sequence RETURNS integer SONAME \"mysql_get_sequence.so\";"
 #define SELECT_MYSQL_GET_SEQUENCE "select get_sequence(1);"
-
+#define DROP_IF_EXISTS_MYSQL "DROP FUNCTION IF EXISTS get_sequence;"
 #define SUCCESS 1
 #define FAIL 0
 

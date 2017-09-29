@@ -135,7 +135,7 @@ void set_credentials(const char *username, const char *password, int database_id
 	//TODO: Save credentials of database
 	printf("Username %s\n", username);
 	printf("password %s\n", password);
-	printf("database_id %d\n", database_id);
+	//printf("database_id %d\n", database_id);
 
 }
 
@@ -180,13 +180,13 @@ int database_main_menu(int database_id){
    					write_database_state(database_id, INSTALLED);
    				} else {
    					//TODO: remove modules
-   					printf("%s\n", "A fatal error has occurred, please reinstall the app");
+   					printf("%s\n", "A fatal error has occurred with server, please reinstall the app");
 					exit(1);
    				}
 
 				
 			} else {
-				printf("%s\n", "A fatal error has occurred, please reinstall the app");
+				printf("%s\n", "A fatal error has occurred with modules, please reinstall the app");
 				exit(1);
 			}
 
@@ -326,6 +326,7 @@ int compile_modules(int database_id){
 			execute = system("cd .. && cd modules/mysql && make");
 			break;
 		default:
+			puts("error with compile");
 			execute = FAIL_SYSTEM;
 	}
 	return execute;
@@ -343,6 +344,7 @@ int insmod(int database_id){
 			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
 			break;
 		default:
+			puts("error with insmod");
 			execute = FAIL_SYSTEM;
 	}
 	return execute;
@@ -458,6 +460,7 @@ unsigned int execute_query(int database_id, int type){
 		case MYSQL_ID:
 			switch(type){
 				case CREATE_FUNCTION:
+					mysql_execute_query(DROP_IF_EXISTS_MYSQL);
 					status = mysql_execute_query(CREATE_FUNCTION_MYSQL_QUERY);
 					break;
 				case SELECT_INITIAL:
@@ -563,7 +566,7 @@ int ioctl_get_seq(int file_desc, int sequence_offset)
 	}
 
 	printf("The current value of sequence is:%d\n", seq);
-	return ret_val;
+	return seq;
 }
 
 void get_current_value (int database_id, int sequence_number){
@@ -594,42 +597,49 @@ void get_current_value (int database_id, int sequence_number){
 
 
 unsigned int backup_of_data(void){
- 	/*time_t rawtime;
-	struct tm * timeinfo;
+	
+	if(read_database_state(MYSQL_ID)==INSTALLED){
+		int file_desc;
 
-  	time ( &rawtime );
-  	timeinfo = localtime ( &rawtime );
-  	char *string_time = asctime (timeinfo);*/
 
-  	int i = 0;
-  	int array[SIZE_SEQUENCES];
-  	for(i=0; i<SIZE_SEQUENCES; i++){
-  		array[i] = i; 
+		file_desc = open(MYSQL_HANDLER_FILE_PATH, 0);
+
+		if (file_desc < 0) {
+			printf("Can't open device file: %s\n", MYSQL_HANDLER_FILE_PATH);
+			exit(-1);
+		}
+
+	  	int i = 0;
+	  	int array[SIZE_SEQUENCES];
+	  	for(i=0; i<SIZE_SEQUENCES; i++){
+	  		array[i] = ioctl_get_seq(file_desc, i); 
+	  	}
+
+		close(file_desc);  	
+
+	  	struct sequences_backup seq_backup;
+	  	strcpy(seq_backup.time_string, "Prueba");
+	  	
+
+	  	int j = 0;
+	  	for (j = 0; j < SIZE_SEQUENCES; j++){
+	  		seq_backup.sequences[j] = array[j];
+	  	}
+	  	
+
+	  	FILE *backup_file;
+
+	  	if((backup_file = fopen(BACKUP_PATH, "wb"))==NULL){
+	  		puts("File could not be openend");
+	  		return 0;
+	  	} else{
+
+	  		fwrite(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
+	  		fclose(backup_file);
+	  		puts("Backup created successfully!");
+	  		return 1;
+	  	}
   	}
-
-  	struct sequences_backup seq_backup;
-  	strcpy(seq_backup.time_string, "Prueba");
-  	
-  	//seq_backup.sequences = ptrArray(array, SIZE_SEQUENCES);
-  	int j = 0;
-  	for (j = 0; j < SIZE_SEQUENCES; j++){
-  		seq_backup.sequences[j] = array[j];
-  	}
-  	
-
-  	FILE *backup_file;
-
-  	if((backup_file = fopen(BACKUP_PATH, "wb"))==NULL){
-  		puts("File could not be openend");
-  		return 0;
-  	} else{
-
-  		fwrite(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
-  		fclose(backup_file);
-  		puts("Backup created successfully!");
-  		return 1;
-  	}
-  	
 
  }
 
@@ -670,7 +680,9 @@ void print_help(void)
 
 int main(int argc, char *argv[]){
 
-	static struct option long_options[] = {
+ //compile_modules(MYSQL_ID);
+ //insmod(MYSQL_ID);
+static struct option long_options[] = {
 		{"cre_seq", required_argument, 0, 'c'},
 		{"get_seq", required_argument, 0, 'g'},
 		{"set_seq", required_argument, 0, 's'},
@@ -714,10 +726,12 @@ int main(int argc, char *argv[]){
 			case 'i':
 				printf("%s\n", "init app");
 				write_log("Init app ");
+				init_app();
 				return EXIT_SUCCESS;
 			case 'e':
 				printf("%s\n", "exit app");
 				write_log("Exit app ");
+				backup_of_data();
 				return EXIT_SUCCESS;
 			case 't':
 				check_cflags_state(MYSQL_ID);
