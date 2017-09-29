@@ -1,0 +1,13 @@
+[Unit]
+Description=Save interface stats on shutdown
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/bin/seqgen \
+	--end
+User=root
+
+[Install]
+WantedBy=multi-user.target
