@@ -77,16 +77,25 @@
 
 #define SIZE_SEQUENCES 11
 
-typedef struct
+
+
+
+struct sequence_request
 {
 	int offset; //Position of the n element to read or write
 	int value ; //Value to send or comes from user
-} sequence_request;
+} ;
 
 struct sequences_backup{
 	int sequences[SIZE_SEQUENCES];
+	int database_id;
 	char time_string[25];
 };
+
+#define MAJOR_NUM 100
+#define MAJOR_NUM_HANDLER 101
+
+#define IOCTL_SET_SEQ _IOR(MAJOR_NUM, 0, struct sequence_request)
 
 void write_log(const char *event);
 
@@ -159,6 +168,8 @@ void get_current_value (int database_id, int sequence_number);
 char *generate_uuid(int database_id);
 
 
+void init_sequences(int database_id);
+
 /* this method creates a file in disk to store the states of every sequence */
 
 unsigned int backup_of_data (void);
@@ -195,7 +206,7 @@ void init_app (void);
 /* ioctl methods */
 
 int ioctl_get_seq(int file_desc, int sequence_offset);
-
+int ioctl_set_seq(int file_desc, struct sequence_request *message);
 
 
 /*** check methodos ***/

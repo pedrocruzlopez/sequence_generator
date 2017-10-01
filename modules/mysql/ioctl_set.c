@@ -50,7 +50,7 @@ int ioctl_get_msg(int file_desc)
 	 * the kernel the buffer length and another to give
 	 * it the buffer to fill
 	 */
-	ret_val = ioctl(file_desc, 1, &seq);
+	ret_val = ioctl(file_desc, 2, &seq);
 
 	if (ret_val < 0) {
 		printf("ioctl_get_msg failed:%d\n", ret_val);
@@ -74,7 +74,7 @@ int main()
 		exit(-1);
 	}
 	sequence_request seq_req;
-	seq_req.offset = 1;
+	seq_req.offset = 2;
 	seq_req.value = 99;
 
 	ioctl_get_msg(file_desc);

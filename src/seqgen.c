@@ -1,3 +1,8 @@
+/*
+	To compile in dev: gcc -o seqgen $(mysql_config --cflags) seqgen.c $(mysql_config --libs) -D __MYSQL_H__ -D DEV
+
+*/
+
 
 #include "seqgen.h"
 #include <unistd.h>
@@ -142,7 +147,7 @@ void set_credentials(const char *username, const char *password, int database_id
 
 int get_credentials_config(int database_id){
 	//TODO: get the config of credencials
-	printf("database_id %d\n", database_id);
+	
 	return 1;
 }
 
@@ -178,6 +183,8 @@ int database_main_menu(int database_id){
    				if(execute_query(database_id, CREATE_FUNCTION)==SUCCESS){
 
    					write_database_state(database_id, INSTALLED);
+   					init_sequences(database_id);
+
    				} else {
    					//TODO: remove modules
    					printf("%s\n", "A fatal error has occurred with server, please reinstall the app");
@@ -553,6 +560,20 @@ void init_app(void){
 
 }
 
+
+int ioctl_set_seq(int file_desc, struct sequence_request *message){
+
+	int ret_val;
+
+	ret_val = ioctl(file_desc, IOCTL_SET_SEQ, message);
+
+	if (ret_val < 0) {
+		printf("ioctl_set_msg failed:%d\n", ret_val);
+		exit(-1);
+	}
+	return ret_val;
+}
+
 int ioctl_get_seq(int file_desc, int sequence_offset)
 {
 	int ret_val;
@@ -568,7 +589,36 @@ int ioctl_get_seq(int file_desc, int sequence_offset)
 	printf("The current value of sequence is:%d\n", seq);
 	return seq;
 }
+void update_sequence (int database_id, int sequence_number, int new_value){
+	int file_desc;
 
+	struct sequence_request seq_req;
+	seq_req.offset = sequence_number;
+	seq_req.value = new_value;
+
+
+	switch(database_id){
+		case MYSQL_ID:
+
+			file_desc = open(MYSQL_HANDLER_FILE_PATH, 0);
+			if (file_desc < 0) {
+				printf("Can't open device file: %s\n", MYSQL_HANDLER_FILE_PATH);
+				exit(-1);
+			}
+			
+			ioctl_set_seq(file_desc, &seq_req);
+			
+			close(file_desc);
+
+			break;
+		case POSTGRESQL_ID:
+
+			break;
+		default:
+			exit(EXIT_FAILURE);
+	}
+
+}
 void get_current_value (int database_id, int sequence_number){
 	int file_desc;
 
@@ -586,7 +636,7 @@ void get_current_value (int database_id, int sequence_number){
 			close(file_desc);
 			break;
 		case POSTGRESQL_ID:
-
+			//TODO
 			break;
 
 		default:
@@ -595,6 +645,27 @@ void get_current_value (int database_id, int sequence_number){
 	
 }
 
+void init_sequences(int database_id){
+	int i=0;
+	switch (database_id){
+
+		case MYSQL_ID:
+
+			for(i=0; i<SIZE_SEQUENCES; i++){
+				update_sequence(MYSQL_ID, i, 1);
+			}
+
+			break;
+		case POSTGRESQL_ID:
+			for(i=0; i<SIZE_SEQUENCES; i++){
+				update_sequence(POSTGRESQL_ID, i, 1);
+			}
+
+			break;
+		default:
+			exit(EXIT_FAILURE);
+	}
+}
 
 unsigned int backup_of_data(void){
 	
@@ -619,7 +690,7 @@ unsigned int backup_of_data(void){
 
 	  	struct sequences_backup seq_backup;
 	  	strcpy(seq_backup.time_string, "Prueba");
-	  	
+	  	seq_backup.database_id = MYSQL_ID;
 
 	  	int j = 0;
 	  	for (j = 0; j < SIZE_SEQUENCES; j++){
@@ -652,13 +723,19 @@ unsigned int backup_of_data(void){
  		puts("File could not be openend");
  		return 0;
  	}else{
- 		//while(!feof(backup_file)){
+ 		
  			fread(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
  			int i;
  			for (i=0; i<SIZE_SEQUENCES; i++){
  				printf("Reading sequence No. %d Value %d\n", i, seq_backup.sequences[i]);
+ 				if(seq_backup.database_id == MYSQL_ID){
+ 					update_sequence(MYSQL_ID, i, seq_backup.sequences[i]);
+ 				} else if(seq_backup.database_id == POSTGRESQL_ID){
+ 					update_sequence(POSTGRESQL_ID, i, seq_backup.sequences[i]);
+ 				}
+ 				
  			}
- 		//}
+ 	
  		fclose(backup_file);
  		return 1;
  	}

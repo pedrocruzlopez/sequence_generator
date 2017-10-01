@@ -110,7 +110,7 @@ int init_module()
 	int ret_val;
 	int i;
 	for (i = 0 ; i < 11 ; i++){
-		sequences[i] = 1;
+		//sequences[i] = 1;
 	}
 
 	/* 
