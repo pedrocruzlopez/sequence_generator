@@ -30,6 +30,7 @@ typedef struct
 #define MAJOR_NUM 100
 #define MAJOR_NUM_HANDLER 101
 
+#define SIZE_SEQUENCES 1024
 
 /* 
  * Set the message of the device driver 

@@ -19,7 +19,7 @@
 static int __device_open = 0;
 
 
-register int sequences[11];
+register int sequences[SIZE_SEQUENCES];
 EXPORT_SYMBOL(sequences);
 
 /* 
@@ -109,8 +109,8 @@ int init_module()
 {
 	int ret_val;
 	int i;
-	for (i = 0 ; i < 11 ; i++){
-		//sequences[i] = 1;
+	for (i = 0 ; i < SIZE_SEQUENCES ; i++){
+		sequences[i] = 0;
 	}
 
 	/* 
