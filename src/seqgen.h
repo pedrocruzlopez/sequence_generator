@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <stdbool.h>
-
+#include <uuid/uuid.h>
 
 
 #define APP_NAME "seqgen"
@@ -75,7 +75,7 @@
 #define BACKUP_PATH "/etc/sequence_generator/sequences.backup"
 #endif
 
-#define SIZE_SEQUENCES 11
+#define SIZE_SEQUENCES 1024
 
 
 
@@ -165,7 +165,7 @@ void restart_sequence (int database_id, int sequence_number);
 
 void get_current_value (int database_id, int sequence_number);
 
-char *generate_uuid(int database_id);
+char *generate_uuid(void);
 
 
 void init_sequences(int database_id);

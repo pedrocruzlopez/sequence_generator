@@ -1,5 +1,5 @@
 /*
-	To compile in dev: gcc -o seqgen $(mysql_config --cflags) seqgen.c $(mysql_config --libs) -D __MYSQL_H__ -D DEV
+	To compile in dev: gcc -o seqgen $(mysql_config --cflags) seqgen.c $(mysql_config --libs) -luuid -D __MYSQL_H__ -D DEV
 
 */
 
@@ -13,6 +13,8 @@
 #include <mysql.h>
 #endif
  
+char uuid_str[37]; 
+
 void check_cflags_state(int database_id){
 
 	switch(database_id){
@@ -56,15 +58,42 @@ void execute_mysql_option(int option){
 	clear();
 	int offset;
 	int exit_val;
+	int new_value;
 	switch(option){
 		case NEW_SEQ:
-			//TODO: Implement new seq methods
+			printf("%s\n", "Please select the number of sequence");
+			scanf("%d", &offset);
+			printf("%s\n", "Please insert a initial value");
+			scanf("%d", &new_value);
+			do{
+				update_sequence(MYSQL_ID, offset, new_value);
+				printf("%s\n", "Press any key");
+				scanf("%d", &exit_val);
+				exit_val = 0;
+			} while (exit_val != 0); 
 			break;
 		case UPDATE_SEQ:
-			//TODO: Implement update 
+			printf("%s\n", "Please select the number of sequence");
+			scanf("%d", &offset);
+			printf("%s\n", "Please insert a new value");
+			scanf("%d", &new_value);
+			do{
+				update_sequence(MYSQL_ID, offset, new_value);
+				printf("%s\n", "Press any key");
+				scanf("%d", &exit_val);
+				exit_val = 0;
+			} while (exit_val != 0); 
 			break;
 		case RESTART_SEQ:
-			//TODO: implement restart
+			printf("%s\n", "Please select the number of sequence");
+			scanf("%d", &offset);
+			do{
+				update_sequence(MYSQL_ID, offset, 1);
+				printf("%s\n", "Press any key");
+				scanf("%d", &exit_val);
+				exit_val = 0;
+			} while (exit_val != 0);
+			
 			break;
 		case GET_SEQ:
 			printf("%s\n", "Please select the number of sequence");
@@ -79,7 +108,13 @@ void execute_mysql_option(int option){
 
 			break;
 		case GEN_UUID:
-			//TODO: implement uuid
+			do{
+				printf("UUID generated = %s\n", generate_uuid());
+				printf("%s\n", "Press any key");
+				scanf("%d", &exit_val);
+				exit_val = 0;
+			} while (exit_val != 0);
+			
 			break;
 		default:
 			exit(EXIT_FAILURE);
@@ -645,6 +680,16 @@ void get_current_value (int database_id, int sequence_number){
 	
 }
 
+char *generate_uuid(void){
+
+	uuid_t uuid;
+	char *pointer;
+    uuid_generate_time_safe(uuid);
+    uuid_unparse_lower(uuid, uuid_str);
+	pointer = uuid_str;
+       
+	return pointer;
+}
 void init_sequences(int database_id){
 	int i=0;
 	switch (database_id){
@@ -652,13 +697,13 @@ void init_sequences(int database_id){
 		case MYSQL_ID:
 
 			for(i=0; i<SIZE_SEQUENCES; i++){
-				update_sequence(MYSQL_ID, i, 1);
+				update_sequence(MYSQL_ID, i, 0);
 			}
 
 			break;
 		case POSTGRESQL_ID:
 			for(i=0; i<SIZE_SEQUENCES; i++){
-				update_sequence(POSTGRESQL_ID, i, 1);
+				update_sequence(POSTGRESQL_ID, i, 0);
 			}
 
 			break;

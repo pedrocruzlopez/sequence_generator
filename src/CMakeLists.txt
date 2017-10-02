@@ -46,7 +46,7 @@ else()
 	target_link_libraries(seqgen "${mysql_libs}")
 endif()
 
-
+target_link_libraries(seqgen "-luuid")
 
 
 #set (CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${mysql_libs}" )
