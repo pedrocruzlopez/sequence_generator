@@ -13,7 +13,7 @@
 
 static int _device_open = 0;
 
-extern int sequences[11];
+extern int sequences[SIZE_SEQUENCES];
 
 static int device_open (struct inode *inode, struct file *file ){
 
