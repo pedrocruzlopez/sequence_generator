@@ -132,6 +132,9 @@ void execute_mysql_option(int option);
 void execute_postgresql_option(int option);
 
 
+
+
+
 char *get_database_name(int database_id);
 
 
@@ -200,6 +203,7 @@ unsigned int execute_query(int database_id, int type);
 unsigned int mysql_execute_query(char *query);
 
 unsigned int postgresql_execute_query(char *query);
+
 
 void init_app (void);
 

@@ -1,6 +1,6 @@
 /*
-	To compile in dev: gcc -o seqgen $(mysql_config --cflags) seqgen.c $(mysql_config --libs) -luuid -D __MYSQL_H__ -D DEV
-
+	To compile in dev: gcc -o seqgen $(mysql_config --cflags) -I $(pg_config --includedir)  seqgen.c $(mysql_config --libs) -luuid -lpq  -D __MYSQL_H__  -D __POSTGRESQL_H__  -D DEV
+    -I $(pg_config --includedir) -lpq
 */
 
 
@@ -12,6 +12,10 @@
 #ifdef __MYSQL_H__
 #include <mysql.h>
 #endif
+
+#ifdef __POSTGRESQL_H__
+#include <libpq-fe.h>
+#endif
  
 char uuid_str[37]; 
 
@@ -19,13 +23,19 @@ void check_cflags_state(int database_id){
 
 	switch(database_id){
 		case MYSQL_ID:
-			#ifdef __MYSQL_H__
-				puts("MYSQL Cflags are present");
-			#else
-				puts("MySQL Cflags are not present, I really wonder if you can do any work, so please install MYSQL and then reinstall this app");
-			#endif
+#ifdef __MYSQL_H__
+            puts("MYSQL Cflags are present");
+#else
+            puts("MySQL Cflags are not present, I really wonder if you can do any work, so please install MYSQL and then reinstall this app");
+#endif
 			break;
 		case POSTGRESQL_ID:
+#ifdef __POSTGRESQL_H__
+            puts("PostgreSQL Cflags are present");
+#else
+            puts("PostgreSQL Cflags are not present, I really wonder if you can do any work, so please install PostgreSQL and then reinstall this app");
+
+#endif
 			break;
 		default:
 			exit(EXIT_FAILURE);
@@ -570,6 +580,44 @@ unsigned int mysql_execute_query(char *query){
 
 }
 
+//PosgreSQL database methods connection:
+
+unsigned int postgresql_execute_query(char *query){
+
+#ifdef __POSTGRESQL_H__
+    PGconn *conn = PQconnectdb("user=postgres password=12345 dbname=postgres");
+
+    if (PQstatus(conn) == CONNECTION_BAD) {
+
+        fprintf(stderr, "Connection to database failed: %s\n",
+                PQerrorMessage(conn));
+        PQfinish(conn);
+        exit(1);
+    }
+
+    PGresult *res = PQexec(conn, "SELECT VERSION()");
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+
+        printf("No data retrieved\n");
+        PQclear(res);
+        PQfinish(conn);
+        exit(1);
+    }
+
+    printf("%s\n", PQgetvalue(res, 0, 0));
+
+    PQclear(res);
+    PQfinish(conn);
+
+#else
+    printf("%s\n", "Seems like you don't have MySQL installed");
+    return FAIL;
+#endif
+
+}
+
+
 void init_app(void){
 	int mysql_state = read_database_state(MYSQL_ID);
 	int postgresql_state = read_database_state(POSTGRESQL_ID);
@@ -802,9 +850,9 @@ void print_help(void)
 
 int main(int argc, char *argv[]){
 
- //compile_modules(MYSQL_ID);
- //insmod(MYSQL_ID);
-static struct option long_options[] = {
+    char *test_db = NULL;
+
+    static struct option long_options[] = {
 		{"cre_seq", required_argument, 0, 'c'},
 		{"get_seq", required_argument, 0, 'g'},
 		{"set_seq", required_argument, 0, 's'},
@@ -814,15 +862,16 @@ static struct option long_options[] = {
 		{"uuid", no_argument, 0, 'u'},
 		{"init", no_argument, 0, 'i'},
 		{"end", no_argument, 0, 'e'},
-		{"test", no_argument, 0, 't'},
+		{"test", required_argument, 0, 't'},
 		{"backup", no_argument, 0, 'b'},
 		{"restore", no_argument, 0, 'y'},
+        {"environment", no_argument, 0, 'v'},
 		{NULL, 0, 0, 0}
 	};
 
 	int value, option_index = 0;
 	
-	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietby", long_options, &option_index)) != -1) {
+	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietbyv", long_options, &option_index)) != -1) {
 		switch (value) {
 			case 'c':
 				printf("%s\n", "create seleted");
@@ -856,7 +905,9 @@ static struct option long_options[] = {
 				backup_of_data();
 				return EXIT_SUCCESS;
 			case 't':
-				check_cflags_state(MYSQL_ID);
+
+                check_cflags_state(POSTGRESQL_ID);
+                postgresql_execute_query("select");
 				return EXIT_SUCCESS;
 			case 'b':
 				backup_of_data();
@@ -864,6 +915,13 @@ static struct option long_options[] = {
 			case 'y':
 				restore_data();
 				return EXIT_SUCCESS;
+            case 'v':
+#ifdef DEV
+                puts("Environment is debug");
+#else
+                puts("Environment is release");
+#endif
+                return EXIT_SUCCESS;
 			case '?':
 				print_help();
 				return EXIT_FAILURE;
