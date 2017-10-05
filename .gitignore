@@ -16,3 +16,13 @@ modules/mysql/ioctl
 src/log
 src/database_state.cnf
 src/sequences.backup
+.idea/.name
+.idea/modules.xml
+.idea/sequence_generator.iml
+.idea/workspace.xml
+cmake-build-debug/
+src/.idea/
+src/cmake-build-debug/
+.idea/misc.xml
+.idea/vcs.xml
+
