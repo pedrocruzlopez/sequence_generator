@@ -9,8 +9,8 @@ if [ -e /dev/postgresql_seq_dev ]
 then
     echo "devices already created"
 else
-   	mknod /dev/postgresql_seq_dev c 100 0
-	mknod /dev/postgresql_seq_handler c 101 0
+   	mknod /dev/postgresql_seq_dev c 200 0
+	mknod /dev/postgresql_seq_handler c 201 0
 fi
 
 echo "Success!"
