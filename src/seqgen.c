@@ -64,7 +64,7 @@ void write_log(const char *event){
    	fclose(fp);
 }
 
-void execute_mysql_option(int option){
+void execute_database_option(int option, int database_id){
 	clear();
 	int offset;
 	int exit_val;
@@ -76,7 +76,7 @@ void execute_mysql_option(int option){
 			printf("%s\n", "Please insert a initial value");
 			scanf("%d", &new_value);
 			do{
-				update_sequence(MYSQL_ID, offset, new_value);
+				update_sequence(database_id, offset, new_value);
 				printf("%s\n", "Press any key");
 				scanf("%d", &exit_val);
 				exit_val = 0;
@@ -88,7 +88,7 @@ void execute_mysql_option(int option){
 			printf("%s\n", "Please insert a new value");
 			scanf("%d", &new_value);
 			do{
-				update_sequence(MYSQL_ID, offset, new_value);
+				update_sequence(database_id, offset, new_value);
 				printf("%s\n", "Press any key");
 				scanf("%d", &exit_val);
 				exit_val = 0;
@@ -98,7 +98,7 @@ void execute_mysql_option(int option){
 			printf("%s\n", "Please select the number of sequence");
 			scanf("%d", &offset);
 			do{
-				update_sequence(MYSQL_ID, offset, 1);
+				update_sequence(database_id, offset, 1);
 				printf("%s\n", "Press any key");
 				scanf("%d", &exit_val);
 				exit_val = 0;
@@ -109,7 +109,7 @@ void execute_mysql_option(int option){
 			printf("%s\n", "Please select the number of sequence");
 			scanf("%d", &offset);
 			do{
-				get_current_value(MYSQL_ID, offset);
+				get_current_value(database_id, offset);
 				printf("%s\n", "Press any key");
 				scanf("%d", &exit_val);
 				exit_val = 0;
@@ -125,23 +125,6 @@ void execute_mysql_option(int option){
 				exit_val = 0;
 			} while (exit_val != 0);
 			
-			break;
-		default:
-			exit(EXIT_FAILURE);
-
-	}
-}
-void execute_postgresql_option(int option){
-	//TODO : implement postgreSQL options
-	printf("%d\n", option);
-}
-void execute_option(int database_id, int option){
-	switch(database_id){
-		case MYSQL_ID:
-			execute_mysql_option(option);
-			break;
-		case POSTGRESQL_ID:
-			execute_postgresql_option(option);
 			break;
 		default:
 			exit(EXIT_FAILURE);
@@ -178,7 +161,7 @@ void get_credentials_from_user_input(int database_id) {
 	int exec_option ;
 	do{
 		 exec_option = database_main_menu(database_id);
-		 execute_option(database_id, exec_option);
+		 execute_database_option(exec_option, database_id);
 	} while(exec_option < 6);
 	
 	
@@ -788,7 +771,16 @@ void get_current_value (int database_id, int sequence_number){
 			close(file_desc);
 			break;
 		case POSTGRESQL_ID:
-			//TODO
+            file_desc = open(PSQL_HANDLER_FILE_PATH, 0);
+            if (file_desc < 0) {
+                printf("Can't open device file: %s\n", PSQL_HANDLER_FILE_PATH);
+                exit(-1);
+            }
+
+
+            ioctl_get_seq(file_desc, sequence_number);
+
+            close(file_desc);
 			break;
 
 		default:

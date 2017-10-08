@@ -153,10 +153,10 @@ int get_credentials_config(int database_id);
 
 int database_main_menu(int database_id);
 
-void execute_option(int database_id, int option);
+/*void execute_option(int database_id, int option);
 void execute_mysql_option(int option);
-void execute_postgresql_option(int option);
-
+void execute_postgresql_option(int option);*/
+void execute_database_option(int option, int database_id);
 
 
 
@@ -242,7 +242,7 @@ int ioctl_get_seq(int file_desc, int sequence_offset);
 int ioctl_set_seq(int file_desc, struct sequence_request *message, int database_id);
 
 
-/*** check methodos ***/
+/*** check methods ***/
 
 void check_cflags_state(int database_id);
 
