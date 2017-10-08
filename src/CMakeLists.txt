@@ -50,7 +50,8 @@ set (sequence_generator_src seqgen.c)
 # Make build flags compiler specific
 if (CMAKE_COMPILER_IS_GNUCC)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		set (CMAKE_C_FLAGS "-D_REETRANT -ggdb -fPIC -Wall -Wextra -pedantic -O0 ${mysql_flags} ${psql_flags} -D DEV")
+		set (CMAKE_C_FLAGS "-D_REETRANT -ggdb -fPIC -Wall -Wextra -pedantic -O0 ${mysql_flags} ${psql_flags} -D DEV -D __CLION_DEBUG__")
+
 		
 		
 		#set (CMAKE_EXE_LINKER_FLAGS  "${mysql_libs}" )

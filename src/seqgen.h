@@ -49,11 +49,12 @@
 #define FAIL_WRITE 0
 
 #define CREATE_FUNCTION_MYSQL_QUERY "CREATE FUNCTION get_sequence RETURNS integer SONAME \"mysql_get_sequence.so\";"
-#define SELECT_MYSQL_GET_SEQUENCE "select get_sequence(1);"
+#define SELECT_MYSQL_GET_SEQUENCE "select get_sequence(0);"
 #define DROP_IF_EXISTS_MYSQL "DROP FUNCTION IF EXISTS get_sequence;"
 
-#define CREATE_FUNCTION_PSQL_QUERY ""
-#define SELECT_PSQL_GET_SEQUENCE ""
+#define CREATE_FUNCTION_PSQL_QUERY "CREATE FUNCTION get_sequence(int) RETURNS integer AS 'postgresql_get_sequence.so', 'get_sequence' LANGUAGE C STRICT;"
+#define SELECT_PSQL_GET_SEQUENCE "select get_sequence(0);"
+#define DROP_IF_EXISTS_PSQL "DROP FUNCTION IF EXISTS get_sequence(int);"
 
 #define SUCCESS 1
 #define FAIL 0
@@ -61,19 +62,39 @@
 #define CREATE_FUNCTION 1
 #define SELECT_INITIAL 2
 
-#define MYSQL_DEVICE_FILE_PATH "/dev/mysql_seq_dev"
 #define MYSQL_HANDLER_FILE_PATH "/dev/mysql_seq_handler"
-
+#define PSQL_HANDLER_FILE_PATH "/dev/postgresql_seq_handler"
 
 #ifdef DEV
+#ifndef __CLION_DEBUG__
 #define COMPILE_MYSQL_MODULES_COMMAND "cd .. && cd modules/mysql && make"
+#define COMPILE_PSQL_MODULES_COMMAND "cd .. && cd modules/postgresql && make"
 #define INSMOD_MYSQL_MODULES_COMMAND "cd .. && cd modules/mysql && ./insmod.sh"
+#define INSMOD_PSQL_MODULES_COMMAND "cd .. && cd modules/postgresql && ./insmod.sh"
+#define RMMOD_MYSQL_MODULES_COMMAND "cd .. && cd modules/mysql && ./rmmod.sh"
+#define RMMOD_PSQL_MODULES_COMMAND "cd .. && cd modules/postgresql && ./rmmod.sh"
 #define STATE_CONFIG_FILE_NAME "database_state.cnf"
 #define LOG_PATH "log"
 #define BACKUP_PATH "sequences.backup"
 #else
+#define COMPILE_MYSQL_MODULES_COMMAND "cd ../.. && cd modules/mysql && make"
+#define COMPILE_PSQL_MODULES_COMMAND "cd ../.. && cd modules/postgresql && make"
+#define INSMOD_MYSQL_MODULES_COMMAND "cd ../.. && cd modules/mysql && ./insmod.sh"
+#define INSMOD_PSQL_MODULES_COMMAND "cd ../.. && cd modules/postgresql && ./insmod.sh"
+#define RMMOD_MYSQL_MODULES_COMMAND "cd ../.. && cd modules/mysql && ./rmmod.sh"
+#define RMMOD_PSQL_MODULES_COMMAND "cd ../.. && cd modules/postgresql && ./rmmod.sh"
+#define STATE_CONFIG_FILE_NAME "../database_state.cnf"
+#define LOG_PATH "../log"
+#define BACKUP_PATH "../sequences.backup"
+#endif
+
+#else
 #define COMPILE_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && make"
+#define COMPILE_PSQL_MODULES_COMMAND "cd /etc/sequence_generator/postgresql && make"
 #define INSMOD_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && ./insmod.sh"
+#define INSMOD_PSQL_MODULES_COMMAND "cd /etc/sequence_generator/postgresql && ./insmod.sh"
+#define RMMOD_MYSQL_MODULES_COMMAND "cd /etc/sequence_generator/mysql && ./rmmod.sh"
+#define RMMOD_PSQL_MODULES_COMMAND "cd /etc/sequence_generator/postgresql && ./rmmod.sh"
 #define STATE_CONFIG_FILE_NAME "/etc/sequence_generator/database_state.cnf"
 #define LOG_PATH "/etc/sequence_generator/log"
 #define BACKUP_PATH "/etc/sequence_generator/sequences.backup"
@@ -96,10 +117,11 @@ struct sequences_backup{
 	char time_string[25];
 };
 
-#define MAJOR_NUM 100
-#define MAJOR_NUM_HANDLER 101
+#define MYSQL_MAJOR_NUM_HANDLER 100
+#define PSQL_MAJOR_NUM_HANDLER 200
 
-#define IOCTL_SET_SEQ _IOR(MAJOR_NUM, 0, struct sequence_request)
+#define MYSQL_IOCTL_SET_SEQ _IOR(MYSQL_MAJOR_NUM_HANDLER, 0, struct sequence_request)
+#define PSQL_IOCTL_SET_SEQ _IOR(PSQL_MAJOR_NUM_HANDLER, 0, struct sequence_request)
 
 void write_log(const char *event);
 
@@ -211,15 +233,18 @@ unsigned int postgresql_execute_query(char *query);
 
 void init_app (void);
 
+void remove_so_libs(int database_id);
+void uninstall_environment (int database_id);
+
 /* ioctl methods */
 
 int ioctl_get_seq(int file_desc, int sequence_offset);
-int ioctl_set_seq(int file_desc, struct sequence_request *message);
+int ioctl_set_seq(int file_desc, struct sequence_request *message, int database_id);
 
 
 /*** check methodos ***/
 
-void check_clags_state(int database_id);
+void check_cflags_state(int database_id);
 
 
 /**********************/

@@ -155,7 +155,13 @@ void get_credentials_from_user_input(int database_id) {
 		char username[20];
 		printf("Please enter your %s username: \n", get_database_name(database_id));
 		scanf("%s", username);
-		char *password = getpass("Please enter your database password: \n");
+
+#ifndef __CLION_DEBUG__
+        char *password = getpass("Please enter your database password: \n");
+#else
+        char *password = "12345";
+#endif
+
 
 		char choice_save[1];
 		while(choice_save[0] != 'y' && choice_save[0] != 'n'){
@@ -374,8 +380,7 @@ int compile_modules(int database_id){
 			execute = system(COMPILE_MYSQL_MODULES_COMMAND);
 			break;
 		case POSTGRESQL_ID:
-			//TODO: compile postgreSQL modules
-			execute = system("cd .. && cd modules/mysql && make");
+			execute = system(COMPILE_PSQL_MODULES_COMMAND);
 			break;
 		default:
 			puts("error with compile");
@@ -392,8 +397,7 @@ int insmod(int database_id){
 			execute = system(INSMOD_MYSQL_MODULES_COMMAND);
 			break;
 		case POSTGRESQL_ID:
-			//TODO: ins postgreSQL modules
-			execute = system("cd .. && cd modules/mysql && ./insmod.sh");
+			execute = system(INSMOD_PSQL_MODULES_COMMAND);
 			break;
 		default:
 			puts("error with insmod");
@@ -402,6 +406,21 @@ int insmod(int database_id){
 	return execute;
 }
 
+int rmmod(int database_id){
+    int execute = FAIL_SYSTEM;
+    switch(database_id){
+        case MYSQL_ID:
+            execute = system(RMMOD_MYSQL_MODULES_COMMAND);
+            break;
+        case POSTGRESQL_ID:
+            execute = system(RMMOD_PSQL_MODULES_COMMAND);
+            break;
+        default:
+            puts("error with insmod");
+            execute = FAIL_SYSTEM;
+    }
+    return execute;
+}
 int write_database_state (int database_id, int state){
 	
 	int other_state ;
@@ -526,8 +545,11 @@ unsigned int execute_query(int database_id, int type){
 		case POSTGRESQL_ID:
 			switch(type){
 				case CREATE_FUNCTION:
+					//postgresql_execute_query(DROP_IF_EXISTS_PSQL);
+					status = postgresql_execute_query(CREATE_FUNCTION_PSQL_QUERY);
 					break;
 				case SELECT_INITIAL:
+					status = postgresql_execute_query(SELECT_PSQL_GET_SEQUENCE);
 					break;
 				default:
 					return FAIL;
@@ -592,26 +614,27 @@ unsigned int postgresql_execute_query(char *query){
         fprintf(stderr, "Connection to database failed: %s\n",
                 PQerrorMessage(conn));
         PQfinish(conn);
-        exit(1);
+        return FAIL;
     }
 
-    PGresult *res = PQexec(conn, "SELECT VERSION()");
+    PGresult *res = PQexec(conn, query);
 
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-
-        printf("No data retrieved\n");
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        puts("Failed command");
+        exit(0);
+        /*printf("No data retrieved\n");
         PQclear(res);
         PQfinish(conn);
-        exit(1);
+        return SUCCESS;*/
     }
 
-    printf("%s\n", PQgetvalue(res, 0, 0));
+    //printf("%s\n", PQgetvalue(res, 0, 0));
 
     PQclear(res);
     PQfinish(conn);
-
+    return SUCCESS;
 #else
-    printf("%s\n", "Seems like you don't have MySQL installed");
+    printf("%s\n", "Seems like you don't have PostgreSQL installed");
     return FAIL;
 #endif
 
@@ -642,13 +665,49 @@ void init_app(void){
 	
 
 }
+void remove_so_libs(int database_id){
+    switch (database_id){
+        case MYSQL_ID:
+            system("");
+            break;
+        case POSTGRESQL_ID:
+            system("rm $(pg_config --pkglibdir)/postgresql_get_sequence.so");
+            break;
+        default:
+            return;
+    }
+}
+void uninstall_environment (int database_id){
+    switch (database_id){
+        case MYSQL_ID:
 
+            break;
+        case POSTGRESQL_ID:
+            postgresql_execute_query(DROP_IF_EXISTS_PSQL);
+            remove_so_libs(POSTGRESQL_ID);
+            rmmod(POSTGRESQL_ID);
+            write_database_state(POSTGRESQL_ID, NOT_INSTALLED);
+            break;
+        default:
+            puts("Fatal error ocurred");
+            return;
+    }
+}
 
-int ioctl_set_seq(int file_desc, struct sequence_request *message){
+int ioctl_set_seq(int file_desc, struct sequence_request *message, int database_id){
 
 	int ret_val;
-
-	ret_val = ioctl(file_desc, IOCTL_SET_SEQ, message);
+    switch (database_id){
+        case MYSQL_ID:
+            ret_val = ioctl(file_desc, MYSQL_IOCTL_SET_SEQ, message);
+            break;
+        case POSTGRESQL_ID:
+            ret_val = ioctl(file_desc, PSQL_IOCTL_SET_SEQ, message);
+            break;
+        default:
+            puts("Fatal error choosing database for ioctl");
+            exit(EXIT_FAILURE);
+    }
 
 	if (ret_val < 0) {
 		printf("ioctl_set_msg failed:%d\n", ret_val);
@@ -689,12 +748,22 @@ void update_sequence (int database_id, int sequence_number, int new_value){
 				exit(-1);
 			}
 			
-			ioctl_set_seq(file_desc, &seq_req);
+			ioctl_set_seq(file_desc, &seq_req, MYSQL_ID);
 			
 			close(file_desc);
 
 			break;
 		case POSTGRESQL_ID:
+
+            file_desc = open(PSQL_HANDLER_FILE_PATH, 0);
+            if(file_desc < 0){
+                printf("Can't open device file: %s\n", PSQL_HANDLER_FILE_PATH);
+                exit(-1);
+            }
+
+            ioctl_set_seq(file_desc, &seq_req, POSTGRESQL_ID);
+
+            close(file_desc);
 
 			break;
 		default:
@@ -866,12 +935,13 @@ int main(int argc, char *argv[]){
 		{"backup", no_argument, 0, 'b'},
 		{"restore", no_argument, 0, 'y'},
         {"environment", no_argument, 0, 'v'},
+        {"uninstall", no_argument, 0, 'k'},
 		{NULL, 0, 0, 0}
 	};
 
 	int value, option_index = 0;
 	
-	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietbyv", long_options, &option_index)) != -1) {
+	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietbyvk", long_options, &option_index)) != -1) {
 		switch (value) {
 			case 'c':
 				printf("%s\n", "create seleted");
@@ -907,7 +977,7 @@ int main(int argc, char *argv[]){
 			case 't':
 
                 check_cflags_state(POSTGRESQL_ID);
-                postgresql_execute_query("select");
+
 				return EXIT_SUCCESS;
 			case 'b':
 				backup_of_data();
@@ -921,6 +991,9 @@ int main(int argc, char *argv[]){
 #else
                 puts("Environment is release");
 #endif
+                return EXIT_SUCCESS;
+            case 'k':
+                uninstall_environment(POSTGRESQL_ID);
                 return EXIT_SUCCESS;
 			case '?':
 				print_help();
