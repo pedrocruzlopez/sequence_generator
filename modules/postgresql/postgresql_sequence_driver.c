@@ -19,8 +19,8 @@
 static int __device_open = 0;
 
 
-register int sequences[SIZE_SEQUENCES];
-EXPORT_SYMBOL(sequences);
+register int psql_sequences[SIZE_SEQUENCES];
+EXPORT_SYMBOL(psql_sequences);
 
 /* 
  * This is called whenever a process attempts to open the device file 
@@ -79,10 +79,10 @@ static int device_release(struct inode *inode, struct file *file)
 long  device_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
 
-	__put_user(sequences[ioctl_num], (int *)ioctl_param);
+	__put_user(psql_sequences[ioctl_num], (int *)ioctl_param);
 	asm( "mov %1, %%ebx;"
  	     "inc %%ebx;"
-         "mov %%ebx, %0" : "=r"(sequences[ioctl_num]) : "r" (sequences[ioctl_num]));
+         "mov %%ebx, %0" : "=r"(psql_sequences[ioctl_num]) : "r" (psql_sequences[ioctl_num]));
 
 	return SUCCESS;
 }
@@ -108,10 +108,7 @@ struct file_operations Fops = {
 int init_module()
 {
 	int ret_val;
-	int i;
-	for (i = 0 ; i < SIZE_SEQUENCES ; i++){
-		sequences[i] = 1;
-	}
+
 
 	/* 
 	 * Register the character device (atleast try) 

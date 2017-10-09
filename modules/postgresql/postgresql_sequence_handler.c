@@ -13,7 +13,7 @@
 
 static int _device_open = 0;
 
-extern int sequences[SIZE_SEQUENCES];
+extern int psql_sequences[SIZE_SEQUENCES];
 
 static int device_open (struct inode *inode, struct file *file ){
 
@@ -54,11 +54,11 @@ long device_ioctl (struct file *file, unsigned int ioctl_num, unsigned long ioct
 			return -EACCES;
 		}
 
-		sequences[seq_req.offset] = seq_req.value;
+		psql_sequences[seq_req.offset] = seq_req.value;
 
 	} else {
 
-		put_user(sequences[ioctl_num], (int *)ioctl_param);
+		put_user(psql_sequences[ioctl_num], (int *)ioctl_param);
 
 	}
 
