@@ -820,78 +820,120 @@ void init_sequences(int database_id){
 			exit(EXIT_FAILURE);
 	}
 }
+void get_array_from_ioctl(int *array_ptr, size_t size, int database_id){
+    int file_desc;
+    if(database_id==MYSQL_ID){
+        file_desc = open(MYSQL_HANDLER_FILE_PATH, 0);
 
+        if (file_desc < 0) {
+            printf("Can't open device file: %s\n", MYSQL_HANDLER_FILE_PATH);
+            exit(-1);
+        }
+
+    } else if(database_id==POSTGRESQL_ID){
+        file_desc = open(PSQL_HANDLER_FILE_PATH, 0);
+
+        if (file_desc < 0) {
+            printf("Can't open device file: %s\n", PSQL_HANDLER_FILE_PATH);
+            exit(-1);
+        }
+    }
+
+
+    int array_counter;
+    for (array_counter = 0; array_counter < size ; array_counter++ , array_ptr++) {
+        *array_ptr = ioctl_get_seq(file_desc, array_counter);
+    }
+    close(file_desc);
+}
+void create_backup_node(int database_id, const int *sequences_ptr, struct sequences_backup *node){
+
+    strcpy(node->time_string, "Prueba");
+    node->database_id = database_id ;
+
+    size_t counter = 0;
+    for (counter = 0; counter < SIZE_SEQUENCES; counter++, sequences_ptr++){
+        node->sequences[counter] = *sequences_ptr;
+    }
+}
 unsigned int backup_of_data(void){
-	
-	if(read_database_state(MYSQL_ID)==INSTALLED){
-		int file_desc;
+
+    FILE *backup_file;
+
+    if((backup_file = fopen(BACKUP_PATH, "wb"))==NULL){
+        puts("File could not be openend");
+        return FAIL_SYSTEM;
+    } else {
+
+        if(read_database_state(MYSQL_ID)==INSTALLED){
+
+            int mysql_sequences_array[SIZE_SEQUENCES];
+            get_array_from_ioctl(mysql_sequences_array, SIZE_SEQUENCES, MYSQL_ID);
+
+            struct sequences_backup mysql_seq_backup;
+
+            create_backup_node(MYSQL_ID, mysql_sequences_array, &mysql_seq_backup);
+
+            fwrite(&mysql_seq_backup, sizeof(struct sequences_backup), 1, backup_file);
+
+        }
+        if(read_database_state(POSTGRESQL_ID)==INSTALLED){
+
+            int psql_sequences_array[SIZE_SEQUENCES];
+            get_array_from_ioctl(psql_sequences_array, SIZE_SEQUENCES, POSTGRESQL_ID);
+
+            struct sequences_backup psql_seq_backup;
+
+            create_backup_node(POSTGRESQL_ID, psql_sequences_array, &psql_seq_backup);
+
+            fwrite(&psql_seq_backup, sizeof(struct sequences_backup), 1, backup_file);
+        }
+
+        fclose(backup_file);
+        puts("Backup created successfully!");
+        return SUCCESS;
+    }
 
 
-		file_desc = open(MYSQL_HANDLER_FILE_PATH, 0);
-
-		if (file_desc < 0) {
-			printf("Can't open device file: %s\n", MYSQL_HANDLER_FILE_PATH);
-			exit(-1);
-		}
-
-	  	int i = 0;
-	  	int array[SIZE_SEQUENCES];
-	  	for(i=0; i<SIZE_SEQUENCES; i++){
-	  		array[i] = ioctl_get_seq(file_desc, i); 
-	  	}
-
-		close(file_desc);  	
-
-	  	struct sequences_backup seq_backup;
-	  	strcpy(seq_backup.time_string, "Prueba");
-	  	seq_backup.database_id = MYSQL_ID;
-
-	  	int j = 0;
-	  	for (j = 0; j < SIZE_SEQUENCES; j++){
-	  		seq_backup.sequences[j] = array[j];
-	  	}
-	  	
-
-	  	FILE *backup_file;
-
-	  	if((backup_file = fopen(BACKUP_PATH, "wb"))==NULL){
-	  		puts("File could not be openend");
-	  		return 0;
-	  	} else{
-
-	  		fwrite(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
-	  		fclose(backup_file);
-	  		puts("Backup created successfully!");
-	  		return 1;
-	  	}
-  	}
 
  }
 
  unsigned int restore_data(void){
 
  	FILE *backup_file;
- 	struct sequences_backup seq_backup;
 
  	if((backup_file = fopen(BACKUP_PATH, "rb"))==NULL){
  		puts("File could not be openend");
- 		return 0;
+ 		return FAIL;
  	}else{
- 		
- 			fread(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
- 			int i;
- 			for (i=0; i<SIZE_SEQUENCES; i++){
- 				printf("Reading sequence No. %d Value %d\n", i, seq_backup.sequences[i]);
- 				if(seq_backup.database_id == MYSQL_ID){
- 					update_sequence(MYSQL_ID, i, seq_backup.sequences[i]);
- 				} else if(seq_backup.database_id == POSTGRESQL_ID){
- 					update_sequence(POSTGRESQL_ID, i, seq_backup.sequences[i]);
- 				}
- 				
- 			}
- 	
+            struct sequences_backup seq_backup;
+            size_t bytes_read;
+            while(!feof(backup_file)){
+
+                bytes_read = fread(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
+                printf("Reading backup for database %s , bytes read:%zu \n", get_database_name(seq_backup.database_id), bytes_read);
+
+                size_t counter;
+                for(counter=0 ; counter < SIZE_SEQUENCES; counter++){
+                    if(counter < 11){
+                        printf("Reading sequence No. %zu Value %d\n", counter, seq_backup.sequences[counter]);
+
+                    } else if(counter == 12){
+                        puts("And goes on...");
+                    }
+
+                    if(seq_backup.database_id == MYSQL_ID){
+                        update_sequence(MYSQL_ID, counter, seq_backup.sequences[counter]);
+                    } else if(seq_backup.database_id == POSTGRESQL_ID){
+                        update_sequence(POSTGRESQL_ID, counter, seq_backup.sequences[counter]);
+                    }
+                }
+
+
+            }
+
  		fclose(backup_file);
- 		return 1;
+ 		return SUCCESS;
  	}
  }
 
