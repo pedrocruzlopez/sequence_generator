@@ -911,21 +911,24 @@ unsigned int backup_of_data(void){
             while(!feof(backup_file)){
 
                 bytes_read = fread(&seq_backup, sizeof(struct sequences_backup), 1, backup_file);
-                printf("Reading backup for database %s , bytes read:%zu \n", get_database_name(seq_backup.database_id), bytes_read);
 
-                size_t counter;
-                for(counter=0 ; counter < SIZE_SEQUENCES; counter++){
-                    if(counter < 11){
-                        printf("Reading sequence No. %zu Value %d\n", counter, seq_backup.sequences[counter]);
+                if (bytes_read) {
+                    printf("Reading backup for database %s , bytes read:%zu \n", get_database_name(seq_backup.database_id), bytes_read);
 
-                    } else if(counter == 12){
-                        puts("And goes on...");
-                    }
+                    size_t counter;
+                    for(counter=0 ; counter < SIZE_SEQUENCES; counter++){
+                        if(counter < 11){
+                            printf("Reading sequence No. %zu Value %d\n", counter, seq_backup.sequences[counter]);
 
-                    if(seq_backup.database_id == MYSQL_ID){
-                        update_sequence(MYSQL_ID, counter, seq_backup.sequences[counter]);
-                    } else if(seq_backup.database_id == POSTGRESQL_ID){
-                        update_sequence(POSTGRESQL_ID, counter, seq_backup.sequences[counter]);
+                        } else if(counter == 12){
+                            puts("And goes on...");
+                        }
+
+                        if(seq_backup.database_id == MYSQL_ID){
+                            update_sequence(MYSQL_ID, counter, seq_backup.sequences[counter]);
+                        } else if(seq_backup.database_id == POSTGRESQL_ID){
+                            update_sequence(POSTGRESQL_ID, counter, seq_backup.sequences[counter]);
+                        }
                     }
                 }
 
