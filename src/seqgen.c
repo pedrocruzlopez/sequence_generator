@@ -134,7 +134,7 @@ void execute_database_option(int option, int database_id){
 
 void get_credentials_from_user_input(int database_id) {
 
-	if(get_credentials_config(database_id)){
+	if(!get_credentials_config(database_id)){
 		char username[20];
 		printf("Please enter your %s username: \n", get_database_name(database_id));
 		scanf("%s", username);
@@ -171,21 +171,64 @@ void get_credentials_from_user_input(int database_id) {
 
 void set_credentials(const char *username, const char *password, int database_id){
 
-	//TODO: Save credentials of database
-	printf("Username %s\n", username);
-	printf("password %s\n", password);
-	//printf("database_id %d\n", database_id);
+    FILE *file_config;
+
+    if((file_config = fopen("credentials_config.cnf", "wb")) == NULL){
+        puts("File could not be opened");
+        exit(-1);
+    } else{
+
+        struct credentials_config config;
+        strcpy(config.username, username);
+        strcpy(config.password, password);
+        config.database_id = database_id;
+        fseek(file_config, (database_id - 1 )*sizeof(struct credentials_config), SEEK_SET);
+        fwrite(&config, sizeof(struct credentials_config), 1, file_config);
+        fclose(file_config);
+
+    }
 
 }
 
 
 int get_credentials_config(int database_id){
-	//TODO: get the config of credencials
+
+    FILE *file_config;
+    if((file_config = fopen("credentials_config.cnf", "rb")) == NULL){
+
+        return 0;
+    } else {
+
+        struct credentials_config config;
+        fseek(file_config, (database_id -1)*sizeof(struct credentials_config), SEEK_SET);
+        size_t bytes_read;
+        bytes_read = fread(&config, sizeof(struct credentials_config), 1, file_config);
+        if(bytes_read){
+            return 1;
+        }
+    }
 	
-	return 1;
+	return 0;
 }
 
+struct credentials_config read_credentials(int database_id){
 
+    FILE *file_config;
+    struct credentials_config config;
+    if((file_config = fopen("credentials_config.cnf", "rb")) == NULL){
+
+        puts("File could not be opened");
+
+
+    } else {
+
+        fseek(file_config, (database_id -1)*sizeof(struct credentials_config), SEEK_SET);
+        fread(&config, sizeof(struct credentials_config), 1, file_config);
+
+    }
+    return config;
+
+}
 char *get_database_name(int database_id){
 
 	char *database_name = "";
@@ -390,7 +433,7 @@ int insmod(int database_id){
 }
 
 int rmmod(int database_id){
-    int execute = FAIL_SYSTEM;
+    int execute;
     switch(database_id){
         case MYSQL_ID:
             execute = system(RMMOD_MYSQL_MODULES_COMMAND);
@@ -663,7 +706,9 @@ void remove_so_libs(int database_id){
 void uninstall_environment (int database_id){
     switch (database_id){
         case MYSQL_ID:
-
+            mysql_execute_query(DROP_IF_EXISTS_MYSQL);
+            rmmod(MYSQL_ID);
+            write_database_state(MYSQL_ID, NOT_INSTALLED);
             break;
         case POSTGRESQL_ID:
             postgresql_execute_query(DROP_IF_EXISTS_PSQL);
@@ -1031,6 +1076,7 @@ int main(int argc, char *argv[]){
                 return EXIT_SUCCESS;
             case 'k':
                 uninstall_environment(POSTGRESQL_ID);
+                uninstall_environment(MYSQL_ID);
                 return EXIT_SUCCESS;
 			case '?':
 				print_help();

@@ -117,6 +117,12 @@ struct sequences_backup{
 	char time_string[25];
 };
 
+struct credentials_config{
+    char username[100];
+    char password[100];
+    int database_id;
+};
+
 #define MYSQL_MAJOR_NUM_HANDLER 100
 #define PSQL_MAJOR_NUM_HANDLER 200
 
