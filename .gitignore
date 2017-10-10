@@ -25,4 +25,5 @@ src/.idea/
 src/cmake-build-debug/
 .idea/misc.xml
 .idea/vcs.xml
+/src/credentials_config.cnf
 
