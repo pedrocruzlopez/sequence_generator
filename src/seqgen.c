@@ -173,7 +173,7 @@ void set_credentials(const char *username, const char *password, int database_id
 
     FILE *file_config;
 
-    if((file_config = fopen("credentials_config.cnf", "wb")) == NULL){
+    if((file_config = fopen("credentials_config.cnf", "rb+")) == NULL){
         puts("File could not be opened");
         exit(-1);
     } else{
@@ -222,9 +222,13 @@ struct credentials_config read_credentials(int database_id){
 
     } else {
 
-        fseek(file_config, (database_id -1)*sizeof(struct credentials_config), SEEK_SET);
+        fseek(file_config, (database_id-1)*sizeof(struct credentials_config), SEEK_SET);
         fread(&config, sizeof(struct credentials_config), 1, file_config);
+        fclose(file_config);
 
+        printf("D Username %s\n", config.username);
+        printf("D Password %s\n", config.password);
+        printf("D Id %d\n", config.database_id);
     }
     return config;
 
@@ -906,7 +910,7 @@ unsigned int backup_of_data(void){
     FILE *backup_file;
 
     if((backup_file = fopen(BACKUP_PATH, "wb"))==NULL){
-        puts("File could not be openend");
+        puts("File could not be opened");
         return FAIL_SYSTEM;
     } else {
 
@@ -1018,12 +1022,13 @@ int main(int argc, char *argv[]){
 		{"restore", no_argument, 0, 'y'},
         {"environment", no_argument, 0, 'v'},
         {"uninstall", no_argument, 0, 'k'},
+        {"credentials", no_argument, 0, 'p'},
 		{NULL, 0, 0, 0}
 	};
 
 	int value, option_index = 0;
-	
-	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietbyvk", long_options, &option_index)) != -1) {
+	struct credentials_config config;
+	while ((value = getopt_long(argc, argv, "c:g:s:r:d:huietbyvkp", long_options, &option_index)) != -1) {
 		switch (value) {
 			case 'c':
 				printf("%s\n", "create seleted");
@@ -1077,6 +1082,14 @@ int main(int argc, char *argv[]){
             case 'k':
                 uninstall_environment(POSTGRESQL_ID);
                 uninstall_environment(MYSQL_ID);
+                return EXIT_SUCCESS;
+            case 'p':
+                config = read_credentials(MYSQL_ID);
+
+                printf("Username %s\n", config.username);
+                printf("Password %s\n", config.password);
+                printf("Id %d\n", config.database_id);
+
                 return EXIT_SUCCESS;
 			case '?':
 				print_help();
