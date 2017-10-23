@@ -10,6 +10,10 @@ Sequence Generator, _seqgen_ , is an alternative to implement numeric auto incre
 
 Note that _seqgen_ aims to improve your management of your surrogate keys, and it's designed to small tables for easy models, _seqgen_ should not be used in big tables.
 
+## Quick details of it's implementation
+
+
+Every numeric sequence belongs to a collections of sequences
 
 ## Getting Started
 
@@ -45,10 +49,6 @@ $ ./install.sh
 ```
 $ sudo apt-get install linux-headers-$(uname -r)
 ```
-## Quick details of it's implementation
-
-
-Every numeric sequence belongs to a collections of sequences
 
 ## How to use
 
@@ -130,11 +130,12 @@ Example:
 ```
 INSERT INTO TABLE (id, name, country) VAUES (get_sequence(1), "Linus Torvalds" , "Finland");
 ```
-Consider that calling the function from a ```SELECT``` statement will also increment the current value of the sequence.
 
 ```
 SELECT get_sequence(2);
 ```
+Consider that calling the function from a ```SELECT``` statement will also increment the current value of the sequence.
+
 #### ``` get_uuid() ```
 This function will generate a universal unique identifier (UUID) in the case that you need a non-numeric field auto-generated, there is no need of parameters because a UUID is not a part of a collection of fields like numeric sequence.
 
